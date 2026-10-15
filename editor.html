@@ -117,21 +117,81 @@
   #pv-toolbar{gap:6px}
   #pv-toolbar button,#pv-toolbar select{font-size:12px}
 }
+
+/* Interface-only workspace styles: scientific figure scene is untouched. */
+#pv-toolbar{gap:8px;padding:10px 11px;align-items:center;overflow:visible;flex-wrap:wrap}
+#pv-toolbar .group{padding-right:8px}
+#pv-toolbar .pv-tool-menu{position:relative;display:inline-flex;align-items:center}
+#pv-toolbar .pv-tool-menu summary{list-style:none;cursor:pointer;border:1px solid #aebfd1;background:#fff;color:#1b3550;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:750;line-height:1.25;user-select:none}
+#pv-toolbar .pv-tool-menu summary::-webkit-details-marker{display:none}
+#pv-toolbar .pv-tool-menu summary::after{content:" ▾";font-size:10px;color:#56728e}
+#pv-toolbar .pv-tool-menu[open] summary{background:#e6f0fc;border-color:#6e91b8}
+#pv-toolbar .pv-export-menu summary{background:#1b4d97;color:#fff;border-color:#1b4d97}
+#pv-toolbar .pv-export-menu summary::after{color:#fff}
+#pv-toolbar .pv-export-menu[open] summary{background:#123765;color:#fff}
+#pv-toolbar .pv-menu-panel{position:absolute;top:calc(100% + 7px);left:0;z-index:100;display:flex;flex-direction:column;gap:5px;min-width:188px;padding:9px;background:#fff;border:1px solid #c8d5e3;border-radius:10px;box-shadow:0 12px 34px rgba(20,45,75,.19)}
+#pv-toolbar .pv-export-menu .pv-menu-panel{left:auto;right:0}
+#pv-toolbar .pv-menu-panel button{width:100%;min-height:34px;padding:8px 10px;text-align:left;font-size:12.5px;font-weight:700;white-space:nowrap}
+#pv-toolbar .pv-menu-panel button.primary{color:#fff}
+#pv-toolbar .pv-scale-label{font-weight:700;font-size:12px;color:#37516c;padding:2px}
+#pv-toolbar .pv-menu-panel select{min-height:34px}
+#pv-toolbar .pv-inspector-btn{font-weight:750}
+#pv-toolbar input[hidden]{display:none!important}
+#pv-toolbar summary:focus-visible{outline:2px solid #2169b2;outline-offset:2px}
+#pv-style-panel{position:relative;top:0;max-height:min(520px,65vh);overflow-y:auto}
+.pv-inspector-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;padding:2px 2px 10px;color:#1d3550}
+.pv-inspector-head strong{font-size:14px;font-weight:800}
+.pv-inspector-head span{font-size:12px;color:#53677e}
+.pv-quick-style{display:flex;flex-wrap:wrap;align-items:center;gap:9px;border:1px solid #e3eaf2;border-radius:8px;padding:8px 10px;margin-bottom:10px;background:#f8fafc}
+.pv-quick-style label{color:#2d4561;font-size:12px;font-weight:750}
+.pv-quick-style input[type=range]{width:160px;accent-color:#1b4d97}
+.pv-quick-style output{font-size:12px;font-weight:750;color:#1b4d97}
+.pv-provenance-note{font-size:11px;font-weight:600;color:#60758b;margin-top:3px}
+#pv-interaction-records .head{background:#fff}
+#pv-stage{padding:10px}
+@media(max-width:760px){#pv-toolbar{padding:8px;gap:6px}#pv-toolbar .pv-tool-menu summary{padding:7px 9px}#pv-toolbar .pv-menu-panel{min-width:170px}#pv-stage{padding:6px}#pv-status{margin-left:0}}
 </style>
 
-<div id="pv-toolbar">
-  <div class="group"><button id="pv-move" class="active">Move</button><button id="pv-select">Select</button></div>
-  <div class="group"><button id="pv-undo">Undo</button><button id="pv-redo">Redo</button><button id="pv-reset">Reset</button></div>
-  <div class="group"><span class="label">Canvas W</span><input id="pv-canvas-w" type="number" min="400" max="5000" step="10" disabled title="Canvas resizing is disabled while the molecular structure is locked"><span class="label">H</span><input id="pv-canvas-h" type="number" min="300" max="5000" step="10" disabled title="Canvas resizing is disabled while the molecular structure is locked"></div>
-  <div class="group"><span class="label">Non-covalent</span><input id="pv-interaction-width" type="range" min="0.7" max="8" step="0.1"><output id="pv-interaction-width-value">3.0</output><span class="label">px</span></div>
-  <div class="group"><button id="pv-style-toggle">Styles</button><button id="pv-add-bond">Add bond</button><button id="pv-add-interaction">Add interaction</button><button id="pv-add-distance">Add distance</button><button id="pv-add-text">Add text</button><button id="pv-add-arrow">Add arrow</button></div>
-  <div class="group"><button id="pv-clear-selection">Clear</button></div>
-  <div class="group"><button id="pv-load-json">Load layout</button><button id="pv-json">Save layout</button></div>
-  <div class="group"><span class="label">Export scale</span><select id="pv-png-scale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="6">6×</option></select><button id="pv-svg" class="primary">Export SVG</button><button id="pv-png">Export PNG</button><button id="pv-pdf">Export PDF</button></div>
+<div id="pv-toolbar" role="toolbar" aria-label="PanViz figure editor">
+  <div class="group" aria-label="Selection"><button id="pv-move" class="active">Move</button><button id="pv-select">Select</button></div>
+  <div class="group" aria-label="Edit history"><button id="pv-undo">Undo</button><button id="pv-redo">Redo</button><button id="pv-reset">Reset</button></div>
+  <details class="pv-tool-menu"><summary>＋ Insert</summary><div class="pv-menu-panel">
+    <button id="pv-add-bond">Graphical bond</button><button id="pv-add-interaction">Interaction annotation</button><button id="pv-add-distance">Distance label</button><button id="pv-add-text">Text annotation</button><button id="pv-add-arrow">Arrow</button>
+  </div></details>
+  <div class="group"><button id="pv-style-toggle" class="pv-inspector-btn">Inspector</button><button id="pv-clear-selection">Clear</button></div>
+  <details class="pv-tool-menu"><summary>Layout</summary><div class="pv-menu-panel">
+    <button id="pv-load-json">Load layout</button><button id="pv-json">Save layout</button>
+  </div></details>
+  <details class="pv-tool-menu pv-export-menu"><summary>Export</summary><div class="pv-menu-panel">
+    <label class="pv-scale-label" for="pv-png-scale">Image scale</label>
+    <select id="pv-png-scale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+    <button id="pv-svg" class="primary">Export SVG</button><button id="pv-png">Export PNG</button><button id="pv-pdf">Export PDF</button>
+  </div></details>
+  <input id="pv-canvas-w" type="number" min="400" max="5000" step="10" disabled hidden aria-hidden="true">
+  <input id="pv-canvas-h" type="number" min="300" max="5000" step="10" disabled hidden aria-hidden="true">
   <input id="pv-layout-file" type="file" accept="application/json,.json,.panviz" style="display:none">
   <span id="pv-status">Ready</span>
 </div>
+<script>
+(function () {
+  const menus = Array.from(document.querySelectorAll('#pv-toolbar details.pv-tool-menu'));
+  menus.forEach(menu => {
+    menu.querySelectorAll('button').forEach(button => button.addEventListener('click', () => { menu.open = false; }));
+    menu.addEventListener('toggle', () => {
+      if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; });
+    });
+  });
+  document.addEventListener('pointerdown', event => {
+    menus.forEach(menu => { if (!menu.contains(event.target)) menu.open = false; });
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') menus.forEach(menu => { menu.open = false; });
+  });
+})();
+</script>
 <div id="pv-style-panel" style="display:none">
+  <div class="pv-inspector-head"><strong>Appearance inspector</strong><span>Edits change presentation, not detected PLIP interactions.</span></div>
+  <div class="pv-quick-style"><label for="pv-interaction-width">Interaction line width</label><input id="pv-interaction-width" type="range" min="0.7" max="8" step="0.1"><output id="pv-interaction-width-value">3.0</output><span>px</span></div>
   <div class="pv-style-grid">
     <section>
       <h4>Residue labels</h4>
@@ -190,9 +250,9 @@
   <div class="head">
     <div>
       <div class="title">Interaction records</div>
-      <div id="pv-interaction-summary" class="summary"></div>
+      <div id="pv-interaction-summary" class="summary"></div><div class="pv-provenance-note">Detected interactions and manually added annotations remain distinct.</div>
     </div>
-    <button id="pv-interaction-toggle" type="button" aria-expanded="false">Show interaction records</button>
+    <button id="pv-interaction-toggle" type="button" aria-expanded="false">Review interactions</button>
   </div>
   <div id="pv-interaction-table-wrap" aria-hidden="true">
     <table id="pv-interaction-table">
