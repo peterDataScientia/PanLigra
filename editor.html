@@ -62,6 +62,61 @@
 #pv-style-panel{position:sticky;top:48px;z-index:29;background:rgba(255,255,255,.98);border:1px solid #d9e0ea;border-top:0;padding:11px;border-radius:0 0 14px 14px;box-shadow:0 7px 20px rgba(31,55,88,.08);backdrop-filter:blur(8px)}
 .pv-style-grid{display:grid;grid-template-columns:1.2fr 1.2fr 1.4fr;gap:10px}.pv-style-grid section{border:1px solid #e5e7eb;border-radius:8px;padding:9px;background:#fcfcfd}.pv-style-grid h4{margin:0 0 8px;font-size:12px}.pv-style-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:5px 0}.pv-style-row label{font-size:10px;color:#5f6368}.pv-style-row input[type=number]{width:55px}.pv-style-row select{min-width:90px}.pv-style-row input[type=color]{width:30px;height:28px;padding:2px}.pv-style-row input[type=range]{width:72px}.pv-style-help{font-size:11px;line-height:1.35;color:#5b6573;margin-top:4px}.pv-style-actions{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}.pv-style-actions button{border:1px solid #d1d5db;background:#fff;border-radius:5px;padding:6px 8px;font-size:11px;cursor:pointer}
 @media(max-width:1250px){.pv-style-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.pv-style-grid{grid-template-columns:1fr}.pv-style-panel{position:relative;top:auto}}
+
+/* UI typography contract for the embedded editor, NOT the scientific SVG.
+   Preserve every molecule, residue, geometry and publication export style. */
+#pv-root{color:#20364d;font-size:13px;font-weight:500;line-height:1.48}
+#pv-toolbar button,#pv-toolbar select,#pv-toolbar input{
+  font-family:Inter,"Segoe UI",Arial,Helvetica,sans-serif;
+  font-size:12.5px;
+  font-weight:650;
+  line-height:1.3;
+  color:#1c3550;
+  border-color:#aebfd1;
+}
+#pv-toolbar button:not(.active):not(.primary){background:#fff;color:#1c3550}
+#pv-toolbar button:hover:not(.active):not(.primary){background:#e6f0fc;border-color:#6e91b8}
+#pv-toolbar button.active,#pv-toolbar button.primary{color:#fff;font-weight:750}
+#pv-toolbar button.primary:hover{background:#123765;border-color:#123765}
+#pv-toolbar .label{font-size:12px;font-weight:700;color:#304b68}
+#pv-toolbar .group output{font-size:12px;font-weight:700;color:#294562}
+#pv-status{font-size:12px;font-weight:700;color:#28425e;border-color:#c8d5e4;background:#f0f5fb}
+#pv-toolbar button:focus-visible,
+#pv-toolbar input:focus-visible,
+#pv-toolbar select:focus-visible,
+#pv-style-panel :is(button,input,select):focus-visible,
+#pv-ribbon :is(button,input,select):focus-visible{
+  outline:2px solid #2169b2;
+  outline-offset:2px;
+}
+#pv-interaction-records .title{font-size:14px;font-weight:800;color:#1d3550}
+#pv-interaction-records .summary{font-size:12px;font-weight:600;color:#415670}
+#pv-interaction-toggle{font-size:12px;font-weight:750;color:#1e4269;border-color:#aabed2}
+#pv-interaction-table th{font-size:12px;font-weight:750;color:#304963}
+#pv-interaction-table td{font-size:12.5px;font-weight:550;color:#24384f}
+.pv-origin-badge{font-size:11px;font-weight:750}
+.pv-source-note{font-size:12px;font-weight:650;color:#435770}
+.pv-style-grid h4{font-size:13px;font-weight:800;color:#1c3957;line-height:1.4}
+.pv-style-row label{font-size:12px;font-weight:650;color:#304962;line-height:1.4}
+.pv-style-help{font-size:12px;font-weight:500;line-height:1.55;color:#40536b}
+.pv-style-actions button{font-size:12px;font-weight:700;color:#1c4269;border-color:#b3c3d4}
+.pv-style-actions button:hover{background:#e8f2fc;border-color:#7399bf}
+#pv-ribbon button,#pv-ribbon select,#pv-ribbon input,
+#pv-edit-pop button,#pv-edit-pop input{
+  font-size:12px;
+  font-weight:600;
+  color:#213b56;
+  border-color:#acbdce;
+}
+#pv-ribbon button.on{color:#fff}
+#pv-ribbon .muted{font-size:12px;font-weight:600;color:#41566f}
+#pv-ribbon .check{font-size:12px;font-weight:650;color:#304961}
+#pv-ribbon button:hover{background:#e8f2fc}
+#pv-ribbon button.on:hover{background:#213f65;color:#fff}
+@media(max-width:760px){
+  #pv-toolbar{gap:6px}
+  #pv-toolbar button,#pv-toolbar select{font-size:12px}
+}
 </style>
 
 <div id="pv-toolbar">
