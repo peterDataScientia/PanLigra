@@ -68,8 +68,8 @@ def test_embedded_editor_controls_have_distinct_typography_from_scientific_svg()
         "</style>", 1
     )[0]
     assert "#pv-toolbar button" in added
-    assert "#pv-style-grid h4" in added
-    assert "#pv-style-row label" in added
+    assert ".pv-style-grid h4" in added
+    assert ".pv-style-row label" in added
     assert "#pv-interaction-table th" in added
     assert "font-weight:750" in added
     assert "focus-visible" in added
