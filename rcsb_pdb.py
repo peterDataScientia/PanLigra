@@ -201,7 +201,7 @@ def download(pdb_id: str) -> dict:
         except FileNotFoundError:
             pdb_bytes = b""
         else:
-            if not any(line.startswith("ATOM  ") for line in pdb_bytes.splitlines()):
+            if not any(line.startswith(b"ATOM  ") for line in pdb_bytes.splitlines()):
                 raise PDBDatabaseError("The downloaded PDB has no protein coordinates.")
             return {
                 "pdb_id": pdb_id, "pdb_bytes": pdb_bytes,
