@@ -30,6 +30,7 @@ print("APPCHK 06 — utils import OK", flush=True)
 from interactive_engine import build_editor_scene
 from scientific_records import build_scientific_records, build_figure_records, write_scientific_exports
 from panviz_version import PANVIZ_VERSION, PANVIZ_RENDERER_REVISION
+import rcsb_pdb
 print("APPCHK 07 — interactive_engine + v6 scientific data layer import OK", flush=True)
 
 print("APPCHK 08 — before set_page_config", flush=True)
@@ -331,6 +332,7 @@ def _write_project_manifest(result, manifest_path):
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "input_mode": result["input_mode"],
         "source_files": result["source_files"],
+        "source_provenance": result.get("source_provenance"),
         "selected_site": result["selected_site"],
         "figure_width": result["figure_width"],
         "figure_height": result["figure_height"],
@@ -365,26 +367,162 @@ work_root=Path(st.session_state.panviz_work_root)
 print(f"APPCHK 21 — session workspace OK ({work_root})", flush=True)
 source_files=[]
 source_payloads=[]
+source_provenance=None
 pose_index=None
 pose_score=None
 
 if input_mode=="PDB complex":
-    print("APPCHK 22 — before PDB file_uploader", flush=True)
-    uploaded=st.file_uploader("Upload protein–ligand PDB complex",type=["pdb"],help="Upload a complete PDB complex containing the protein and ligand.")
-    print(f"APPCHK 23 — PDB file_uploader OK (uploaded={uploaded is not None})", flush=True)
-    if not uploaded:
-        print("APPCHK 24 — before no-upload info", flush=True)
-        st.info("Upload a PDB complex to begin.")
-        print("APPCHK 25 — no-upload info OK", flush=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        print("APPCHK 26 — closing markdown OK; about to st.stop", flush=True)
-        st.stop()
-    pdb_path=work_root/uploaded.name
-    file_bytes=uploaded.getvalue()
-    pdb_path.write_bytes(file_bytes)
-    source_stem=Path(uploaded.name).stem
-    source_files=[uploaded.name]
-    source_payloads=[(uploaded.name,file_bytes)]
+    structure_source = st.radio(
+        "Structure source",
+        ["Upload PDB", "Search RCSB PDB"],
+        horizontal=True,
+        key="panviz_pdb_source",
+    )
+    if structure_source == "Upload PDB":
+        uploaded=st.file_uploader(
+            "Upload protein–ligand PDB complex",type=["pdb"],
+            help="Upload the complete protein–ligand complex, including ligand coordinates.",
+        )
+        if not uploaded:
+            st.info("Upload a protein–ligand PDB complex, or select Search RCSB PDB.")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.stop()
+        file_bytes=uploaded.getvalue()
+        filename=Path(uploaded.name).name
+        pdb_path=work_root/filename
+        pdb_path.write_bytes(file_bytes)
+        source_stem=Path(filename).stem
+        source_files=[filename]
+        source_payloads=[(filename,file_bytes)]
+    else:
+        st.caption("Find experimental structures in the RCSB Protein Data Bank and import a deposited protein–ligand complex directly.")
+        with st.form("panviz_rcsb_search_form"):
+            mode = st.selectbox(
+                "Search by",
+                ["Keywords", "PDB ID", "Protein name", "Ligand name / ID"],
+                key="panviz_rcsb_mode",
+            )
+            search_term = st.text_input(
+                "Search PDB database",
+                placeholder="e.g. plasmepsin II, 1LF2, R37",
+                key="panviz_rcsb_query",
+            )
+            with st.expander("Optional search filters"):
+                organism = st.text_input(
+                    "Source organism", placeholder="e.g. Plasmodium falciparum"
+                )
+                ligand_only = st.checkbox(
+                    "Require a nonpolymer component", value=True,
+                    help="May include ions or crystallization additives, not necessarily a suitable ligand.",
+                )
+            submitted = st.form_submit_button("Search RCSB PDB", type="primary")
+        if submitted:
+            try:
+                with st.spinner("Searching the RCSB PDB database…"):
+                    options = dict(
+                        query=search_term, mode=mode, organism=organism,
+                        ligand_only=ligand_only,
+                    )
+                    found = rcsb_pdb.search(**options)
+                    rows = rcsb_pdb.summaries(found["ids"])
+                st.session_state.panviz_rcsb_search = dict(
+                    options=options, result=found, rows=rows, start=0
+                )
+                st.session_state.pop("panviz_rcsb_loaded", None)
+            except rcsb_pdb.PDBDatabaseError as exc:
+                st.error(str(exc))
+                st.session_state.pop("panviz_rcsb_search", None)
+        search_state = st.session_state.get("panviz_rcsb_search")
+        if not search_state:
+            st.info("Search by PDB ID, protein, ligand or keywords to explore structures.")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.stop()
+        matches=search_state["result"]
+        if not matches["ids"]:
+            st.info("No matching structures. Change the keywords or relax the filters.")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.stop()
+        start=search_state["start"]
+        st.caption(
+            f'{matches["total"]} PDB matches · showing '
+            f'{start+1}–{start+len(matches["ids"])}. '
+            "Nonpolymer components can include solvent additives or ions."
+        )
+        st.table(pd.DataFrame(search_state["rows"]))
+        prev_col,next_col=st.columns(2)
+        previous=prev_col.button("Previous PDB results", disabled=start==0)
+        following=next_col.button(
+            "Next PDB results", disabled=start+len(matches["ids"])>=matches["total"]
+        )
+        if previous or following:
+            next_start=max(0,start+(-10 if previous else 10))
+            try:
+                with st.spinner("Loading PDB search results…"):
+                    found=rcsb_pdb.search(
+                        **search_state["options"], start=next_start
+                    )
+                    rows=rcsb_pdb.summaries(found["ids"])
+                st.session_state.panviz_rcsb_search=dict(
+                    options=search_state["options"],result=found,
+                    rows=rows,start=next_start,
+                )
+                st.rerun()
+            except rcsb_pdb.PDBDatabaseError as exc:
+                st.warning(str(exc))
+        pdb_id=st.selectbox(
+            "Select PDB structure",
+            matches["ids"],
+            key="panviz_rcsb_selected_id",
+        )
+        metadata=next(
+            (row for row in search_state["rows"] if row["PDB ID"]==pdb_id), {}
+        )
+        if metadata:
+            st.caption(f'{pdb_id} · {metadata.get("Title", "")}')
+        st.markdown(f"[View {pdb_id} at RCSB](https://www.rcsb.org/structure/{pdb_id})")
+        if st.button("Load selected PDB structure", type="primary"):
+            try:
+                with st.spinner(f"Downloading {pdb_id} from RCSB PDB…"):
+                    data=rcsb_pdb.download(pdb_id)
+                st.session_state.panviz_rcsb_loaded=data
+                st.session_state.pop("panviz_result", None)
+                st.rerun()
+            except rcsb_pdb.PDBDatabaseError as exc:
+                st.error(str(exc))
+        loaded=st.session_state.get("panviz_rcsb_loaded")
+        if not loaded or loaded.get("pdb_id")!=pdb_id:
+            st.info("Choose a result and click **Load selected PDB structure**.")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.stop()
+        pdb_path=work_root/loaded["pdb_filename"]
+        pdb_path.write_bytes(loaded["pdb_bytes"])
+        source_stem=loaded["pdb_id"]
+        source_files=[loaded["source_filename"]]
+        source_payloads=[
+            (loaded["source_filename"],loaded["original_bytes"])
+        ]
+        if loaded["converted"]:
+            # Preserve both original archive mmCIF and PLIP input PDB in bundle.
+            source_files.append(loaded["pdb_filename"])
+            source_payloads.append(
+                (loaded["pdb_filename"],loaded["pdb_bytes"])
+            )
+        source_provenance={
+            "database": "RCSB Protein Data Bank",
+            "pdb_id": loaded["pdb_id"],
+            "download_url": loaded["source_url"],
+            "retrieved_utc": loaded["retrieved_utc"],
+            "archive_format": loaded["source_format"],
+            "converted_to_pdb_for_plip": bool(loaded["converted"]),
+        }
+        st.success(
+            f'Loaded {pdb_id} directly from the RCSB PDB archive.'
+        )
+        if loaded["converted"]:
+            st.caption(
+                "Original mmCIF and the PLIP-compatible PDB conversion "
+                "will both be included in the project bundle."
+            )
 else:
     left_card, right_card = st.columns(2, gap="large")
     with left_card:
@@ -486,6 +624,7 @@ if analyze:
             result={
                 "key": result_key,
                 "input_mode": input_mode,
+                "source_provenance": source_provenance,
                 "source_files": [
                     {"name":name,"sha256":_sha256_bytes(data)} for name,data in source_payloads
                 ],
@@ -514,7 +653,7 @@ if analyze:
             project_readme = results_root/"PROJECT_README.md"
             project_readme.write_text(
                 f"# PanViz {PANVIZ_VERSION} project bundle\n\n"
-                "This package contains the original uploaded input file(s), the PLIP-prepared complex, "
+                "This package contains the original structure input file(s), the PLIP-prepared complex, "
                 "canonical PLIP scientific records, the initial editable layout, "
                 "and a machine-readable manifest. Presentation styling in PanViz does not modify the underlying "
                 "PLIP scientific interaction records. Use the editor's **Save layout** and **Load layout** controls "
