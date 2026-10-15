@@ -1,0 +1,9 @@
+# Keep PanViz controls readable and consistent with its publication workbench.
+# The embedded scientific SVG/editor styles are maintained separately.
+[theme]
+base = "light"
+primaryColor = "#194c88"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f2f6fb"
+textColor = "#23364d"
+font = "sans serif"

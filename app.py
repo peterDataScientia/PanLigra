@@ -59,6 +59,138 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 .stButton>button{border-radius:9px;font-weight:700}
 .stDownloadButton>button{border-radius:9px}
 .panviz-foot{color:#7a8798;font-size:.73rem;margin-top:10px}
+
+/* PanViz reading hierarchy: legible text, deliberate weights and AA-safe ink.
+   Only the Streamlit application chrome is styled here; the PLIP figure, its
+   immutable molecule and scientific renderer are never targeted. */
+:root{
+  --pv-body:#23364d;
+  --pv-label:#1b3553;
+  --pv-help:#40536b;
+  --pv-button:#193f70;
+  --pv-field-border:#a9bbd0;
+}
+[data-testid="stAppViewContainer"]{
+  font-family:Inter,"Segoe UI",Arial,Helvetica,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  color:var(--pv-body);
+}
+[data-testid="stAppViewContainer"] .block-container{
+  font-size:15px;
+  font-weight:500;
+  line-height:1.55;
+}
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stAppViewContainer"] [data-testid="stText"]{
+  color:var(--pv-body);
+  font-weight:500;
+  line-height:1.55;
+}
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] p,
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] label,
+[data-testid="stAppViewContainer"] [data-testid="stFileUploader"] label,
+[data-testid="stAppViewContainer"] [data-testid="stForm"] label,
+[data-testid="stAppViewContainer"] [data-testid="stSelectbox"] label{
+  color:var(--pv-label)!important;
+  font-size:14px!important;
+  font-weight:700!important;
+  line-height:1.45!important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stRadio"] label p,
+[data-testid="stAppViewContainer"] [data-testid="stCheckbox"] label p{
+  color:var(--pv-label)!important;
+  font-size:14px!important;
+  font-weight:600!important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] p,
+[data-testid="stAppViewContainer"] [data-testid="stExpander"] summary,
+[data-testid="stAppViewContainer"] [data-testid="stFileUploaderDropzone"] small{
+  color:var(--pv-help)!important;
+  font-size:13px!important;
+  font-weight:550!important;
+  line-height:1.5!important;
+}
+[data-testid="stAppViewContainer"] input:not([type="range"]):not([type="color"]),
+[data-testid="stAppViewContainer"] textarea,
+[data-testid="stAppViewContainer"] [data-baseweb="select"] input{
+  color:var(--pv-label)!important;
+  font-size:14px!important;
+  font-weight:550!important;
+}
+[data-testid="stAppViewContainer"] input::placeholder,
+[data-testid="stAppViewContainer"] textarea::placeholder{
+  color:#50627a!important;
+  opacity:1;
+}
+[data-testid="stAppViewContainer"] [data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stAppViewContainer"] [data-testid="stTextInput"] input{
+  border-color:var(--pv-field-border);
+}
+[data-testid="stAppViewContainer"] [data-testid="stButton"] button,
+[data-testid="stAppViewContainer"] [data-testid="stDownloadButton"] button,
+[data-testid="stAppViewContainer"] [data-testid="stFormSubmitButton"] button{
+  font-size:14px!important;
+  font-weight:700!important;
+  line-height:1.4!important;
+  letter-spacing:.005em;
+  border-radius:9px;
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-primary"]{
+  background:#194c88!important;
+  border-color:#194c88!important;
+  color:#fff!important;
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-primary"]:hover{
+  background:#113862!important;
+  border-color:#113862!important;
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-secondary"]{
+  background:#edf4fc!important;
+  border:1px solid #94afcf!important;
+  color:var(--pv-button)!important;
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-secondary"]:hover{
+  background:#dae9fb!important;
+  border-color:#557da9!important;
+}
+[data-testid="stAppViewContainer"] button[data-testid^="stBaseButton"] :is(p,span){
+  color:inherit!important;
+  font-weight:inherit!important;
+}
+[data-testid="stAppViewContainer"] button:focus-visible{
+  outline:3px solid #2673b7!important;
+  outline-offset:2px!important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stAlert"] p,
+[data-testid="stAppViewContainer"] [data-testid="stAlert"] span{
+  color:#243b54;
+  font-weight:550;
+}
+[data-testid="stAppViewContainer"] [data-testid="stTable"] th{
+  color:#1b3553;
+  font-size:13px;
+  font-weight:750;
+}
+[data-testid="stAppViewContainer"] [data-testid="stTable"] td{
+  color:#283e56;
+  font-size:13px;
+  font-weight:500;
+}
+.panviz-title{font-size:2rem;font-weight:800;line-height:1.15;color:#172c44}
+.panviz-subtitle{font-size:.97rem;font-weight:550;color:#3b5069;line-height:1.5}
+.panviz-badge{font-size:.76rem;font-weight:700;color:#294664}
+.panviz-section h4{font-size:15px;font-weight:800;line-height:1.4;color:#193956}
+.pdbqt-step{font-size:12px;font-weight:800;color:#38536d}
+.pdbqt-card-title{font-size:15px;font-weight:800;color:#193956}
+.pdbqt-card-desc{font-size:13px;font-weight:550;color:#40536b;line-height:1.55}
+.pdbqt-example{font-size:12px;font-weight:550;color:#40536b;line-height:1.55}
+.pdbqt-example code{font-size:11.5px;font-weight:600;color:#173b63}
+.panviz-foot{font-size:12px;font-weight:550;color:#40536b}
+@media(max-width:760px){
+  .panviz-title{font-size:1.7rem}
+  [data-testid="stAppViewContainer"] .block-container{font-size:14px}
+}
 </style>
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
