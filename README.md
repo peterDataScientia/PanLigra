@@ -5,7 +5,9 @@ PanViz is a PLIP-based protein–ligand interaction visualization workflow with 
 ## What is complete in v6.0.0
 
 ### Input
-- **PDB complex**: upload a complete protein–ligand `.pdb` complex.
+- **PDB complex**: upload a complete protein–ligand `.pdb` complex **or search the RCSB Protein Data Bank directly** by keywords, protein name, ligand name/ID, or PDB accession. Browse entry titles, methods, resolution, and nonpolymer counts before importing.
+- The RCSB importer retrieves deposited coordinates (native PDB where available, otherwise mmCIF converted to a PLIP-compatible PDB using Gemmi). The original archive file and any converted PDB are preserved in the PanViz project bundle with PDB ID, source URL, retrieval time and format provenance.
+- PDB search filters are for discovery only. Presence of nonpolymer entities does **not** confirm an appropriate bound ligand: PanViz still requires PLIP to detect an eligible ligand/binding site. Older/complex entries with chain IDs that cannot be faithfully represented in legacy PDB require a curated PDB input.
 - **Docking PDBQT**: upload a receptor `.pdb` or `.pdbqt` plus a ligand/Vina `.pdbqt` file.
 - Multiple ligand `MODEL` poses are detected and selectable.
 - Vina `REMARK VINA RESULT` scores are shown when present.
