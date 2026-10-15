@@ -52,11 +52,11 @@ def test_live_table_is_refreshed_with_editor_render_cycle():
     assert "legendLayer();renderInteractionTable();" in editor
 
 
-def test_editor_remains_scrollable_below_figure():
+def test_editor_resizes_without_nested_scrollbars():
     app = Path("app.py").read_text(encoding="utf-8")
     editor = Path("editor.html").read_text(encoding="utf-8")
 
-    assert "scrolling=True" in app
+    assert "scrolling=False" in app
     assert "MutationObserver" in app
     assert "function requestHostResize()" in editor
     assert "requestHostResize();" in editor
@@ -76,7 +76,7 @@ def test_interaction_table_is_collapsed_by_default():
     assert '#pv-interaction-records.open #pv-interaction-table-wrap{display:block}' in editor
     assert 'id="pv-interaction-toggle"' in editor
     assert 'aria-expanded="false"' in editor
-    assert 'Show interaction records' in editor
+    assert 'Review interactions' in editor
     assert "Hide interaction records" in editor
 
 
@@ -92,7 +92,7 @@ def test_pdf_and_png_share_the_same_export_geometry():
     assert "const pdfW=xg.width*pxToPt;" in editor
     assert "const pdfH=xg.height*pxToPt;" in editor
     assert "c.width=xg.width;c.height=xg.height;" in editor
-    assert '<span class="label">Export scale</span>' in editor
+    assert '<label class="pv-scale-label" for="pv-png-scale">Image scale</label>' in editor
 
 
 def test_legend_layout_does_not_read_state_during_state_initialization():
