@@ -206,9 +206,9 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 [data-testid="stSidebar"] [data-testid="stFileUploader"]{background:#fff;border-radius:10px}
 @media(max-width:900px){.pv-header-note{display:none}.panviz-title{font-size:1.4rem!important}}
 
-.pv-empty-workspace{margin-top:5px;max-width:740px;padding:40px 32px;border:1px dashed #c2d2e4;border-radius:16px;background:linear-gradient(145deg,#f8fbff,#fff);text-align:center}
+.pv-empty-workspace{margin-top:5px;max-width:740px;padding:24px 20px;border:1px dashed #c2d2e4;border-radius:16px;background:linear-gradient(145deg,#f8fbff,#fff);text-align:center}
 .pv-empty-icon{font-size:34px;color:#1b4d97;font-weight:800;line-height:1}
-.pv-empty-workspace h3{margin:10px 0;font-size:20px;font-weight:750;color:#203852}
+.pv-empty-workspace h3{margin:6px 0 0;font-size:20px;font-weight:750;color:#203852}
 .pv-empty-workspace p{max-width:525px;margin:0 auto;color:#435b75;font-size:14px;line-height:1.65}
 .pv-empty-steps{margin:20px auto 0;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .pv-empty-steps span{font-size:12px;font-weight:700;color:#1d4d7c;background:#edf4fb;border:1px solid #dce8f4;padding:7px 11px;border-radius:999px}
@@ -217,7 +217,7 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
 print("APPCHK 12 — before PanViz header markdown", flush=True)
-st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><div class="panviz-mark">⬡</div><div><div class="panviz-title">PanViz <span class="pv-version">v{PANVIZ_VERSION}</span></div><div class="panviz-subtitle">Protein–ligand interactions · analysis and figure curation</div></div></div><div class="pv-header-note">Scientific interactions preserved · Presentation editable</div></div>""", unsafe_allow_html=True)
+st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><div class="panviz-mark">⬡</div><div class="panviz-title">PanViz <span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
 print("APPCHK 13 — PanViz header markdown OK", flush=True)
 
 print("APPCHK 14 — before editor.html read", flush=True)
@@ -508,14 +508,11 @@ def _write_project_manifest(result, manifest_path):
     Path(manifest_path).write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-st.markdown('<div class="pv-workspace-intro"><span class="pv-kicker">SCIENTIFIC WORKSPACE</span><span>Analyse interactions, curate the figure and export the results.</span></div>',unsafe_allow_html=True)
 workspace_empty = st.empty()
 workspace_empty.markdown("""
 <div class="pv-empty-workspace">
   <div class="pv-empty-icon">⬡</div>
-  <h3>Start with a protein–ligand complex</h3>
-  <p>Use the structure panel on the left to upload a complex or search the RCSB PDB. Choose a binding site, then open the interactive figure editor.</p>
-  <div class="pv-empty-steps"><span>1 · Load</span><span>2 · Analyse</span><span>3 · Curate and export</span></div>
+  <h3>Load a structure to begin</h3>
 </div>
 """, unsafe_allow_html=True)
 with st.sidebar:
