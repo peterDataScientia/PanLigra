@@ -13,7 +13,7 @@ def test_structure_workflow_stays_in_sidebar():
     assert "Search RCSB PDB" in sidebar
     assert "Upload receptor PDB / PDBQT" in sidebar
     assert "Upload ligand or Vina PDBQT" in sidebar
-    assert 'with st.expander("Advanced · figure dimensions", expanded=False)' in sidebar
+    assert 'with st.expander("Figure size", expanded=False)' in sidebar
     assert 'st.button("Open interaction editor"' in sidebar
     assert "st.table(" not in sidebar
     assert 'format_func=lambda x: f"{x} · ' in sidebar
@@ -39,7 +39,10 @@ def test_menus_preserve_editor_actions_and_provenance():
     assert ">Export</summary>" in EDITOR
     assert ">Inspector</button>" in EDITOR
     assert "Original detections remain" not in EDITOR
-    assert "Detected interactions and manually added annotations remain distinct." in EDITOR
+    assert "Detected interactions and manually added annotations remain distinct." not in EDITOR
+    assert "pv-interaction-table-body" in EDITOR
+    assert "pv-origin-detected" in EDITOR
+    assert "pv-origin-manual" in EDITOR
     assert "state.scientificData?.interactions" in EDITOR
     assert "state.customInteractions" in EDITOR
 
@@ -49,4 +52,31 @@ def test_locked_molecular_workflow_not_modified():
     assert "scene,scene_root=build_editor_scene(" in APP
     assert "Molecular structure" in EDITOR
     assert "LOCKED — ORIGINAL CHEMICAL STRUCTURE" in EDITOR
+    assert "Professional object controls" not in EDITOR
+    assert "Edits change presentation, not detected PLIP interactions." not in EDITOR
     assert "scrolling=False" in APP
+
+
+def test_app_clears_manual_style_prompts():
+    visible_copy = [
+        "Import a complex, select a binding site, and open the editor.",
+        "Find experimental structures in the RCSB Protein Data Bank",
+        "Select a structure from the results below.",
+        "Choose a result and click **Load selected PDB structure**.",
+        "Generated results remain available until",
+        "Scientific interactions preserved · Presentation editable",
+        "Molecular structure and PLIP records remain immutable during figure edits.",
+    ]
+    for phrase in visible_copy:
+        assert phrase not in APP
+
+
+def test_editor_has_no_embedded_manual_sections():
+    manual_phrases = [
+        "Professional object controls",
+        "The legend is independently editable.",
+        "Multiple interactions between the same residue and ligand atom are automatically",
+        "Edits change presentation, not detected PLIP interactions.",
+    ]
+    for phrase in manual_phrases:
+        assert phrase not in EDITOR

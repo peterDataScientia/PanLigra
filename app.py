@@ -512,13 +512,12 @@ workspace_empty = st.empty()
 workspace_empty.markdown("""
 <div class="pv-empty-workspace">
   <div class="pv-empty-icon">⬡</div>
-  <h3>Load a structure to begin</h3>
+  <h3>No structure loaded</h3>
 </div>
 """, unsafe_allow_html=True)
 with st.sidebar:
     print("APPCHK 16 — before input section markdown", flush=True)
     st.markdown("### Load structure")
-    st.caption("Import a complex, select a binding site, and open the editor.")
     print("APPCHK 17 — input section markdown OK", flush=True)
     print("APPCHK 18 — before input_mode radio", flush=True)
     input_mode=st.radio("Input mode",["PDB complex","Docking PDBQT"],horizontal=True)
@@ -544,11 +543,9 @@ with st.sidebar:
         if structure_source == "Upload PDB":
             uploaded=st.file_uploader(
                 "Upload protein–ligand PDB complex",type=["pdb"],
-                help="Upload the complete protein–ligand complex, including ligand coordinates.",
+                help="Include receptor and ligand coordinates.",
             )
             if not uploaded:
-                st.info("Upload a protein–ligand PDB complex, or select Search RCSB PDB.")
-                
                 st.stop()
             file_bytes=uploaded.getvalue()
             filename=Path(uploaded.name).name
@@ -558,7 +555,6 @@ with st.sidebar:
             source_files=[filename]
             source_payloads=[(filename,file_bytes)]
         else:
-            st.caption("Find experimental structures in the RCSB Protein Data Bank and import a deposited protein–ligand complex directly.")
             with st.form("panviz_rcsb_search_form"):
                 mode = st.selectbox(
                     "Search by",
@@ -576,7 +572,7 @@ with st.sidebar:
                     )
                     ligand_only = st.checkbox(
                         "Require a nonpolymer component", value=True,
-                        help="May include ions or crystallization additives, not necessarily a suitable ligand.",
+                        help="Includes ions and additives.",
                     )
                 submitted = st.form_submit_button("Search RCSB PDB", type="primary")
             if submitted:
@@ -597,22 +593,14 @@ with st.sidebar:
                     st.session_state.pop("panviz_rcsb_search", None)
             search_state = st.session_state.get("panviz_rcsb_search")
             if not search_state:
-                st.info("Search by PDB ID, protein, ligand or keywords to explore structures.")
-                
                 st.stop()
             matches=search_state["result"]
             if not matches["ids"]:
-                st.info("No matching structures. Change the keywords or relax the filters.")
+                st.warning("No matching structures.")
                 
                 st.stop()
             start=search_state["start"]
-            st.caption(
-                f'{matches["total"]} PDB matches · showing '
-                f'{start+1}–{start+len(matches["ids"])}. '
-                "Nonpolymer components can include solvent additives or ions."
-            )
-            # Keep candidate selection in one searchable control instead of duplicating a table and dropdown.
-            st.caption("Select a structure from the results below.")
+            st.caption(f'{matches["total"]} results · {start+1}–{start+len(matches["ids"])}')
             prev_col,next_col=st.columns(2)
             previous=prev_col.button("Previous PDB results", disabled=start==0)
             following=next_col.button(
@@ -643,8 +631,6 @@ with st.sidebar:
             metadata=next(
                 (row for row in search_state["rows"] if row["PDB ID"]==pdb_id), {}
             )
-            if metadata:
-                st.caption(f'{pdb_id} · {metadata.get("Title", "")}')
             st.markdown(f"[View {pdb_id} at RCSB](https://www.rcsb.org/structure/{pdb_id})")
             if st.button("Load selected PDB structure", type="primary"):
                 try:
@@ -657,8 +643,6 @@ with st.sidebar:
                     st.error(str(exc))
             loaded=st.session_state.get("panviz_rcsb_loaded")
             if not loaded or loaded.get("pdb_id")!=pdb_id:
-                st.info("Choose a result and click **Load selected PDB structure**.")
-                
                 st.stop()
             pdb_path=work_root/loaded["pdb_filename"]
             pdb_path.write_bytes(loaded["pdb_bytes"])
@@ -681,29 +665,17 @@ with st.sidebar:
                 "archive_format": loaded["source_format"],
                 "converted_to_pdb_for_plip": bool(loaded["converted"]),
             }
-            st.success(
-                f'Loaded {pdb_id} directly from the RCSB PDB archive.'
-            )
-            if loaded["converted"]:
-                st.caption(
-                    "Original mmCIF and the PLIP-compatible PDB conversion "
-                    "will both be included in the project bundle."
-                )
     else:
-        st.markdown("**Receptor**")
         receptor_upload=st.file_uploader(
             "Upload receptor PDB / PDBQT", type=["pdb", "pdbqt"],
-            help="Macromolecular receptor structure.", key="pdbqt_receptor_upload",
+            key="pdbqt_receptor_upload",
         )
-        st.markdown("**Docked ligand**")
         ligand_upload=st.file_uploader(
             "Upload ligand or Vina PDBQT", type=["pdbqt"],
-            help="Docked ligand output; multiple MODEL poses are supported.",
+            help="Supports multiple poses.",
             key="pdbqt_ligand_upload",
         )
         if not receptor_upload or not ligand_upload:
-            st.info("Upload both files: first the **PROTEIN / RECEPTOR**, then the **LIGAND / DOCKING POSES**.")
-            
             st.stop()
         receptor_path=work_root/receptor_upload.name; receptor_bytes=receptor_upload.getvalue(); receptor_path.write_bytes(receptor_bytes)
         ligand_path=work_root/ligand_upload.name; ligand_bytes=ligand_upload.getvalue(); ligand_path.write_bytes(ligand_bytes)
@@ -724,17 +696,14 @@ with st.sidebar:
             
             st.stop()
         source_stem=Path(ligand_upload.name).stem
-        st.success(f"Prepared docking pose {pose_index+1} of {nposes} as a PLIP-ready PDB complex." + (f" Vina score: {pose_score:.2f} kcal/mol." if pose_score is not None else ""))
-
 
 
     try:binding_sites=_eligible_binding_sites(pdb_path)
-    except Exception as exc:st.error(f"The structure could not be read by PLIP: {exc}");st.stop()
-    if not binding_sites:st.error("No eligible small-molecule binding site was detected in the prepared structure.");st.stop()
-    st.success(f"Detected {len(binding_sites)} eligible binding site(s).")
-    st.markdown("### Analysis setup")
+    except Exception as exc:st.error(f"PLIP could not read the structure: {exc}");st.stop()
+    if not binding_sites:st.error("No eligible ligand-binding site found.");st.stop()
+    st.markdown("### Analysis")
     selected_site=st.selectbox("Ligand / binding site", binding_sites)
-    with st.expander("Advanced · figure dimensions", expanded=False):
+    with st.expander("Figure size", expanded=False):
         out_width=st.number_input("Figure width",min_value=700,max_value=3000,value=1200,step=100)
         out_height=st.number_input("Figure height",min_value=500,max_value=3000,value=850,step=50)
     analyze=st.button("Open interaction editor",type="primary",use_container_width=True)
@@ -754,7 +723,7 @@ result_key=_sha256_bytes(json.dumps(result_key_payload,sort_keys=True).encode())
 
 if analyze:
     results_root=work_root/"PanViz_results";results_root.mkdir(parents=True,exist_ok=True)
-    with st.spinner("Running PLIP once and building the interactive editor…"):
+    with st.spinner("Analyzing interactions…"):
         try:
             analysis_obj=plip_2d_interactions(
                 str(pdb_path),
@@ -833,13 +802,10 @@ if analyze:
 
 result=st.session_state.get("panviz_result")
 if not result or result.get("key")!=result_key:
-    st.info("Configure the analysis above, then click **Generate PanViz interaction diagram**. Generated results remain available until you change the input, pose, binding site, or canvas size.")
     st.stop()
 
 workspace_empty.empty()
-st.markdown("### Interactive figure editor")
+st.markdown("### Editor")
 render_editor(result["scene"])
 
-
-st.markdown(f'<div class="panviz-foot">PanViz v{PANVIZ_VERSION} · Molecular structure and PLIP records remain immutable during figure edits.</div>', unsafe_allow_html=True)
 

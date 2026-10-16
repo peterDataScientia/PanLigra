@@ -190,7 +190,7 @@
 })();
 </script>
 <div id="pv-style-panel" style="display:none">
-  <div class="pv-inspector-head"><strong>Appearance inspector</strong><span>Edits change presentation, not detected PLIP interactions.</span></div>
+  <div class="pv-inspector-head"><strong>Inspector</strong></div>
   <div class="pv-quick-style"><label for="pv-interaction-width">Interaction line width</label><input id="pv-interaction-width" type="range" min="0.7" max="8" step="0.1"><output id="pv-interaction-width-value">3.0</output><span>px</span></div>
   <div class="pv-style-grid">
     <section>
@@ -212,29 +212,12 @@
     </section>
     <section>
       <h4>Molecular structure</h4>
-      <div class="pv-style-help"><strong>LOCKED — ORIGINAL CHEMICAL STRUCTURE</strong><br>Atoms, covalent bonds, bond order, coordinates, and molecular topology are immutable. The original molecule cannot be moved, resized, rotated, edited, added, deleted, or altered. A molecular bond may be clicked only to <strong>copy it as a new independent graphical bond</strong>.</div>
-    </section>
-    <section>
-      <h4>Professional object controls</h4>
-      <div class="pv-style-help">
-        <strong>Selection:</strong> Click • Shift+Click multi-select • Ctrl+A select all annotations • Tab / Shift+Tab cycle.<br>
-        <strong>Clipboard:</strong> Ctrl+C Copy • Ctrl+V Paste • Ctrl+X Cut • Ctrl+D Duplicate.<br>
-        <strong>History:</strong> Ctrl+Z Undo • Ctrl+Y / Ctrl+Shift+Z Redo • Ctrl+S Save layout.<br>
-        <strong>Object control:</strong> Arrow keys move 1 px • Shift+Arrow move 10 px • Alt+Arrow rotate 15° • Enter/F2 edit text • Delete removes selected objects • Esc clears selection.<br>
-        <strong>Lines:</strong> Drag endpoints to resize dynamically • + / = expand • − compress • rotation/direction controls are available on the contextual ribbon.<br>
-        <strong>Text:</strong> Ctrl+B / Ctrl+I / Ctrl+U apply formatting to the selected text object.
-      </div>
-    </section>
-    <section>
-      <h4>Legend editor</h4>
-      <div class="pv-style-help">The legend is independently editable. Select the legend to open its object ribbon. Use the entry dropdown to add/remove/reorder interaction and bond entries, rename labels, change colors, line widths, dash styles, background, and text color. Removing a legend entry <strong>does not remove the underlying molecular interaction or bond</strong>.</div>
+      <div class="pv-style-help"><strong>LOCKED — ORIGINAL CHEMICAL STRUCTURE</strong></div>
     </section>
     <section>
       <h4>Interaction styles</h4>
       <div class="pv-style-row"><label>Type</label><select id="pv-int-type"><option value="HPI">Hydrophobic</option><option value="HB">H-bond</option><option value="WB">Water bridge</option><option value="SB">Salt bridge</option><option value="PS">π-Stacking</option><option value="PC">π-Cation</option><option value="XB">Halogen bond</option><option value="MC">Metal coordination</option></select></div>
       <div class="pv-style-row"><label>Color</label><input id="pv-int-color" type="color"><label>Width</label><input id="pv-int-style-width" type="number" min="0.7" max="8" step="0.1"><label>Dash</label><select id="pv-int-dash"><option value="9 5">Dashed</option><option value="6 4">Short dash</option><option value="3 3">Fine dash</option><option value="">Solid</option></select></div>
-      <div class="pv-style-help">Multiple interactions between the same residue and ligand atom are automatically rendered with increased weight while retaining each distance label.</div>
-      <div class="pv-style-row"><label>Width scope</label><span class="muted">Global width unless type is customized.</span></div>
       <div class="pv-style-actions"><button id="pv-apply-int-type">Apply to this interaction type</button><button id="pv-int-use-global">Use global width</button></div>
     </section>
   </div>
@@ -250,7 +233,7 @@
   <div class="head">
     <div>
       <div class="title">Interaction records</div>
-      <div id="pv-interaction-summary" class="summary"></div><div class="pv-provenance-note">Detected interactions and manually added annotations remain distinct.</div>
+      <div id="pv-interaction-summary" class="summary"></div>
     </div>
     <button id="pv-interaction-toggle" type="button" aria-expanded="false">Review interactions</button>
   </div>
@@ -425,7 +408,7 @@ function resetResidueDefaults(){pushUndo();state.style.residue={labelFormat:'nam
 function resetDistanceDefaults(){pushUndo();state.style.distance={fontFamily:'Arial',fontSize:16,fontWeight:700,textColor:'#000000',backgroundColor:'#ffffff',backgroundOpacity:.96};syncStylePanel();renderAnnotations();renderSelection();}
 function normAngle(a){while(a>180)a-=360;while(a<-180)a+=360;return a;}
 function rotatePoint(x,y,cx,cy,deg){const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a),dx=x-cx,dy=y-cy;return{x:cx+dx*c-dy*s,y:cy+dx*s+dy*c};}
-function setMode(m){mode=m;document.getElementById('pv-move').classList.toggle('active',m==='move');document.getElementById('pv-select').classList.toggle('active',m==='select');status.textContent=m==='move'?'Move mode: annotations and legend only.':'Select mode: click an annotation, then edit it from the contextual ribbon.';}
+function setMode(m){mode=m;document.getElementById('pv-move').classList.toggle('active',m==='move');document.getElementById('pv-select').classList.toggle('active',m==='select');status.textContent=m==='move'?'Move':'Select';}
 function pushUndo(){past.push(clone(state));if(past.length>100)past.shift();future=[];}
 function textStyle(o){return `${o.italic?'italic ':''}${o.bold?'700':'400'} ${o.fontSize||16}px ${o.fontFamily||'Arial'}`;}
 function measure(o,text){const c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font=textStyle(o);const m=ctx.measureText(String(text));o.w=Math.max(8,m.width);o.h=Math.max(8,(o.fontSize||16)*1.06);}
@@ -475,7 +458,7 @@ function beginMolecularBondCopy(evt,id){
   setSelectedRef('moleculeBond',id,false);
   drag=null;
   renderSelection();showRibbon();positionRibbon();
-  status.textContent='Original molecular bond selected for COPY ONLY. The molecular structure remains locked.';
+  status.textContent='Bond locked · Copy to edit';
 }
 function makeStandaloneBondFromMolecular(o){
   if(!o)return null;
@@ -725,7 +708,7 @@ function showRibbon(){
     itemSel.onchange=()=>{o._selectedItemId=itemSel.value;showRibbon();positionRibbon();};
     const addType=document.createElement('select');addType.title='Add legend entry';[['HPI','Hydrophobic'],['HB','H-bond'],['WB','Water bridge'],['SB','Salt bridge'],['PS','π-Stacking'],['PC','π-Cation'],['XB','Halogen bond'],['MC','Metal coordination'],['BOND','Bond'],['CUSTOM','Custom']].forEach(([v,lbl])=>{const op=document.createElement('option');op.value=v;op.textContent=`+ ${lbl}`;addType.appendChild(op);});
     const addBtn=ribbonButton('Add',()=>{pushUndo();const it=addLegendItem(addType.value);o._selectedItemId=it.id;renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=`Added legend entry: ${it.label}.`;},'Add a legend entry from the dropdown');
-    const delBtn=ribbonButton('Remove',()=>{const it=selectedItem();if(!it)return;pushUndo();removeLegendItem(it.id);o._selectedItemId=o.items?.[0]?.id||null;renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent='Removed legend entry. This does not remove the underlying interaction or bond.';},'Remove selected legend entry');
+    const delBtn=ribbonButton('Remove',()=>{const it=selectedItem();if(!it)return;pushUndo();removeLegendItem(it.id);o._selectedItemId=o.items?.[0]?.id||null;renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent='Legend entry removed';},'Remove selected legend entry');
     const upBtn=ribbonButton('↑',()=>{const it=selectedItem();if(!it)return;pushUndo();moveLegendItem(it.id,-1);renderAnnotations();renderSelection();showRibbon();positionRibbon();},'Move legend entry left/up');
     const dnBtn=ribbonButton('↓',()=>{const it=selectedItem();if(!it)return;pushUndo();moveLegendItem(it.id,1);renderAnnotations();renderSelection();showRibbon();positionRibbon();},'Move legend entry right/down');
     const typeSel=document.createElement('select');typeSel.title='Legend entry type';[['HPI','Hydrophobic'],['HB','H-bond'],['WB','Water bridge'],['SB','Salt bridge'],['PS','π-Stacking'],['PC','π-Cation'],['XB','Halogen bond'],['MC','Metal coordination'],['BOND','Bond'],['CUSTOM','Custom']].forEach(([v,lbl])=>{const op=document.createElement('option');op.value=v;op.textContent=lbl;typeSel.appendChild(op);});
@@ -774,7 +757,7 @@ function legendLayout(l,canvasWidth=null){
 }
 function measureLegend(l,canvasWidth=null){if(!l)return;if(canvasWidth!=null)l._canvasWidth=Number(canvasWidth);const g=legendLayout(l,canvasWidth);l.w=g.w;l.h=g.h;}
 function setLegendFont(v){if(!state.legend)return;pushUndo();state.legend.fontSize=clamp(Number(v)||14,6,40);measureLegend(state.legend);renderAnnotations();renderSelection();showRibbon();positionRibbon();}
-function rotateSelected(delta){const z=currentSelection();if(!z)return;if(z.kind==='bond'&&isProtectedMolecularBond(z.obj)){status.textContent='Molecular structure is read-only. Copy the bond first.';return;}pushUndo();z.obj.rotation=normAngle(Number(z.obj.rotation||0)+delta);if(z.kind==='interaction')renderAnnotations();else renderAnnotations();renderSelection();showRibbon();positionRibbon();}
+function rotateSelected(delta){const z=currentSelection();if(!z)return;if(z.kind==='bond'&&isProtectedMolecularBond(z.obj)){status.textContent='Bond locked · Copy to edit';return;}pushUndo();z.obj.rotation=normAngle(Number(z.obj.rotation||0)+delta);if(z.kind==='interaction')renderAnnotations();else renderAnnotations();renderSelection();showRibbon();positionRibbon();}
 function beginRotate(evt,kind,id){
   evt.preventDefault();evt.stopPropagation();setSelectedRef(kind,id,false);renderSelection();showRibbon();const z=currentSelection();if(!z||z.kind==='moleculeBond')return;const p=point(evt),o=z.obj;const cx=['legend','label','distance','note'].includes(z.kind)?o.x:(o.x1+o.x2)/2;const cy=['legend','label','distance','note'].includes(z.kind)?o.y:(o.y1+o.y2)/2;const startAngle=Math.atan2(p.y-cy,p.x-cx);pushUndo();drag={rotating:true,type:kind,id,center:{x:cx,y:cy},baseRotation:Number(o.rotation||0),startAngle,pointerId:evt.pointerId};try{svg.setPointerCapture?.(evt.pointerId);}catch(e){}}
 function rotateMove(evt){if(!drag||!drag.rotating)return;evt.preventDefault();const p=point(evt),a1=Math.atan2(p.y-drag.center.y,p.x-drag.center.x);const z=currentSelection();if(!z)return;z.obj.rotation=normAngle(drag.baseRotation+(a1-drag.startAngle)*180/Math.PI);updateObjectDom(z);renderSelection();}
@@ -819,7 +802,7 @@ function begin(evt,type,id){
   else{pushUndo();drag={type,id,start:point(evt),base:clone(z.obj),pointerId:evt.pointerId,rotating:false};}
   try{svg.setPointerCapture?.(evt.pointerId);}catch(e){}
 }
-function beginEndpoint(evt,kind,id,endpoint){evt.preventDefault();evt.stopPropagation();if(kind==='bond'&&isProtectedMolecularBond(bondEdit(id))){status.textContent='Original molecular structure is read-only. Copy the bond first.';return;}setSelectedRef(kind,id,false);const z=currentSelection();if(!z||selectedItems.length!==1)return;pushUndo();drag={endpoint:true,type:kind,id,which:endpoint,start:point(evt),base:clone(z.obj),pointerId:evt.pointerId,rotating:false};try{svg.setPointerCapture?.(evt.pointerId);}catch(e){}showRibbon();}
+function beginEndpoint(evt,kind,id,endpoint){evt.preventDefault();evt.stopPropagation();if(kind==='bond'&&isProtectedMolecularBond(bondEdit(id))){status.textContent='Bond locked · Copy to edit';return;}setSelectedRef(kind,id,false);const z=currentSelection();if(!z||selectedItems.length!==1)return;pushUndo();drag={endpoint:true,type:kind,id,which:endpoint,start:point(evt),base:clone(z.obj),pointerId:evt.pointerId,rotating:false};try{svg.setPointerCapture?.(evt.pointerId);}catch(e){}showRibbon();}
 function dragMove(evt){if(!drag||drag.rotating||drag.resizing)return;evt.preventDefault();const p=point(evt),dx=p.x-drag.start.x,dy=p.y-drag.start.y;const z=currentSelection();if(!z)return;if(drag.endpoint){if(drag.which==='x1'){z.obj.x1=p.x;z.obj.y1=p.y;}else{z.obj.x2=p.x;z.obj.y2=p.y;}z.obj.rotation=0;}else if(drag.bases){for(const item of drag.bases){const zz=resolveRef(item.ref);if(!zz)continue;const o=zz.obj,b=item.obj;if(o.x!=null){o.x=b.x+dx;o.y=b.y+dy;}if(o.x1!=null){o.x1=b.x1+dx;o.x2=b.x2+dx;o.y1=b.y1+dy;o.y2=b.y2+dy;o.rotation=0;}}}else if(['label','distance','legend','note'].includes(z.kind)){z.obj.x=drag.base.x+dx;z.obj.y=drag.base.y+dy;}else if(['interaction','bond','arrow'].includes(z.kind)){z.obj.x1=drag.base.x1+dx;z.obj.y1=drag.base.y1+dy;z.obj.x2=drag.base.x2+dx;z.obj.y2=drag.base.y2+dy;z.obj.rotation=0;}updateObjectDom(z);if(drag.bases)selectedResolved().forEach(updateObjectDom);renderSelection();positionRibbon();}
 function end(evt){if(!drag)return;try{svg.releasePointerCapture?.(drag.pointerId);}catch(e){}drag=null;future=[];positionRibbon();}
 function onCanvasPointerMove(evt){if(!drag)return;if(drag.rotating)rotateMove(evt);else if(drag.resizing)resizeMove(evt);else dragMove(evt);}
@@ -829,10 +812,10 @@ function serializableObjectForClipboard(z){if(!z||!copyAllowed(z))return null;if
 function uniqueCloneId(prefix){return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;}
 function offsetCopiedObject(payload,dx=24,dy=24){const z=clone(payload);if(!z||!z.obj)return null;z.obj.id=uniqueCloneId(z.kind);if(z.obj.x!=null){z.obj.x=Number(z.obj.x)+dx;z.obj._originX=z.obj.x;}if(z.obj.y!=null){z.obj.y=Number(z.obj.y)+dy;z.obj._originY=z.obj.y;}if(z.obj.x1!=null){z.obj.x1=Number(z.obj.x1)+dx;z.obj.x2=Number(z.obj.x2)+dx;z.obj.y1=Number(z.obj.y1)+dy;z.obj.y2=Number(z.obj.y2)+dy;z.obj.rotation=0;}z.obj.visible=true;return z;}
 function insertCopiedObject(z){if(!z||!z.obj)return null;if(z.kind==='bond'){z.obj.id=uniqueCloneId('bondedit');z.obj.sourceBondId=null;z.obj.a=null;z.obj.b=null;z.obj.scientificSourceId=null;z.obj.custom=true;z.obj.editable=true;z.obj.visible=true;state.bondEdits.push(z.obj);const li=ensureLegendItem('BOND');state.legend._selectedItemId=li?.id||state.legend._selectedItemId||null;return{type:'bond',id:z.obj.id};}if(z.kind==='interaction'){const originalId=z.obj.id;z.obj.id=uniqueCloneId('customint');z.obj.scientificSourceId=null;z.obj.residueId=null;z.obj.anchorAtom=null;z.obj.interactionId=null;z.obj.originalDistance=null;z.obj.multiplicity=1;z.obj.custom=true;z.obj.customLineWidth=true;z.obj.customColor=true;z.obj.customDash=true;z.obj.visible=true;state.customInteractions.push(z.obj);const li=ensureLegendItem(z.obj.type);state.legend._selectedItemId=li?.id||state.legend._selectedItemId||null;return{type:'interaction',id:z.obj.id};}if(z.kind==='label'){z.obj.id=uniqueCloneId('label');z.obj.sourceResidue=null;z.obj.residueId=null;z.obj.anchorX=Number(z.obj.x);z.obj.anchorY=Number(z.obj.y);z.obj.leaderVisible=false;z.obj.scientificSourceId=null;z.obj.custom=true;z.obj.visible=true;state.labels.push(z.obj);return{type:'label',id:z.obj.id};}if(z.kind==='distance'){z.obj.id=uniqueCloneId('distance');z.obj.interactionId=null;z.obj.originalDistance=null;z.obj.scientificSourceId=null;z.obj.custom=true;z.obj.visible=true;state.distances.push(z.obj);return{type:'distance',id:z.obj.id};}if(z.kind==='note'){z.obj.id=uniqueCloneId('note');z.obj.visible=true;state.notes.push(z.obj);return{type:'note',id:z.obj.id};}if(z.kind==='arrow'){z.obj.id=uniqueCloneId('arrow');z.obj.visible=true;state.arrows.push(z.obj);return{type:'arrow',id:z.obj.id};}return null;}
-function copySelected(){const zs=selectedResolved().filter(copyAllowed);if(!zs.length){status.textContent='Select an editable object to copy.';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);clipboardObject=items.length===1?items[0]:{kind:'group',items};status.textContent=items.length>1?`Copied ${items.length} objects.`:'Copied.';}
+function copySelected(){const zs=selectedResolved().filter(copyAllowed);if(!zs.length){status.textContent='Select an object';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);clipboardObject=items.length===1?items[0]:{kind:'group',items};status.textContent=items.length>1?`Copied ${items.length} objects.`:'Copied.';}
 function pastePayload(payload){
-  if(!payload||payload.panviz!=='annotation'){status.textContent='Paste: clipboard does not contain a PanViz graphical object.';return;}
-  if(payload.kind==='group'&&!Array.isArray(payload.items)){status.textContent='Paste: invalid group payload.';return;}
+  if(!payload||payload.panviz!=='annotation'){status.textContent='Clipboard is empty';return;}
+  if(payload.kind==='group'&&!Array.isArray(payload.items)){status.textContent='Invalid clipboard data';return;}
   const isCut=payload.cut===true && payload.cutConsumed!==true;
   const items=payload.kind==='group'?payload.items:[{kind:payload.kind,obj:payload.obj}];
   const added=[];pushUndo();
@@ -840,14 +823,14 @@ function pastePayload(payload){
     const z=isCut?clone(item):offsetCopiedObject(item);
     if(z){const ref=insertCopiedObject(z);if(ref)added.push(ref);}
   }
-  if(!added.length){status.textContent='Paste: no editable graphical objects were created.';return;}
+  if(!added.length){status.textContent='Nothing to paste';return;}
   if(payload.cut===true){payload.cutConsumed=true;}
   selectedItems=added;selected=added[added.length-1];editPop.style.display='none';renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=isCut?`Pasted ${added.length} object${added.length>1?'s':''}.`:`Pasted ${added.length} object${added.length>1?'s':''}.`;
 }
-function pasteClipboard(){if(clipboardObject){pastePayload({panviz:'annotation',...clipboardObject});return;}status.textContent='Nothing copied in PanViz.';}
-function duplicateSelected(){const zs=selectedResolved().filter(z=>editableAllowed(z)||z.kind==='moleculeBond');if(!zs.length){status.textContent='Duplicate: select an editable graphical object or an original molecular bond.';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);const added=[];pushUndo();for(const item of items){const z=offsetCopiedObject(item);if(z){const ref=insertCopiedObject(z);if(ref)added.push(ref);}}selectedItems=added;selected=added[added.length-1]||null;renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=`Duplicated ${added.length} independent object${added.length>1?'s':''}.`;
+function pasteClipboard(){if(clipboardObject){pastePayload({panviz:'annotation',...clipboardObject});return;}status.textContent='Nothing copied';}
+function duplicateSelected(){const zs=selectedResolved().filter(z=>editableAllowed(z)||z.kind==='moleculeBond');if(!zs.length){status.textContent='Select an object';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);const added=[];pushUndo();for(const item of items){const z=offsetCopiedObject(item);if(z){const ref=insertCopiedObject(z);if(ref)added.push(ref);}}selectedItems=added;selected=added[added.length-1]||null;renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=`Duplicated ${added.length} independent object${added.length>1?'s':''}.`;
 }
-function cutSelected(){const zs=selectedResolved().filter(editableAllowed);if(!zs.length){status.textContent='Select an editable object to cut.';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);clipboardObject=items.length===1?{...items[0],cut:true,cutConsumed:false}:{kind:'group',items,cut:true,cutConsumed:false};pushUndo();zs.forEach(removeEditableObject);selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';renderAnnotations();renderSelection();status.textContent=`Cut ${zs.length} object${zs.length>1?'s':''}.`;}
+function cutSelected(){const zs=selectedResolved().filter(editableAllowed);if(!zs.length){status.textContent='Select an editable object';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);clipboardObject=items.length===1?{...items[0],cut:true,cutConsumed:false}:{kind:'group',items,cut:true,cutConsumed:false};pushUndo();zs.forEach(removeEditableObject);selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';renderAnnotations();renderSelection();status.textContent=`Cut ${zs.length} object${zs.length>1?'s':''}.`;}
 
 function addBond(){pushUndo();const id=uniqueCloneId('bondedit'),o={id,order:1,x1:state.width*.36,y1:state.height*.44,x2:state.width*.58,y2:state.height*.44,width:2,color:'#000000',dash:'',rotation:0,visible:true,custom:true,editable:true};state.bondEdits.push(o);const li=ensureLegendItem('BOND');state.legend._selectedItemId=li?.id||null;setSelectedRef('bond',id,false);renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent='New graphical bond added. A Bond legend entry was added automatically if needed.';}
 function addInteraction(){pushUndo();const id=uniqueCloneId('customint'),o={id,type:'HB',label:'Custom interaction',residueId:null,anchorAtom:null,x1:state.width*.40,y1:state.height*.42,x2:state.width*.60,y2:state.height*.58,originalDistance:null,multiplicity:1,color:'#0000E0',visible:true,lineWidth:3,customLineWidth:true,customColor:true,customDash:true,dash:'9 5',rotation:0,custom:true};state.customInteractions.push(o);const li=ensureLegendItem(o.type);state.legend._selectedItemId=li?.id||null;setSelectedRef('interaction',id,false);renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=`New ${legendTypeDefaults(o.type).label} interaction annotation added.`;}
@@ -858,8 +841,8 @@ function lineAngle(o){const e=o.order!=null?bondVisualEndpoints(o):interactionEn
 function interactionAngle(o){const e=interactionEnds(o);return normAngle(Math.atan2(e.y2-e.y1,e.x2-e.x1)*180/Math.PI);}
 function setInteractionDirection(deg){const z=currentSelection();if(!z||z.kind!=='interaction')return;const target=Number(deg);if(!Number.isFinite(target))return;const current=interactionAngle(z.obj),delta=normAngle(target-current);pushUndo();z.obj.rotation=normAngle(Number(z.obj.rotation||0)+delta);renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=`Interaction direction set to ${Math.round(normAngle(target))}°.`;}
 function setLineDirection(deg){const z=currentSelection();if(!z||!['bond','interaction'].includes(z.kind))return;const target=Number(deg);if(!Number.isFinite(target))return;const current=lineAngle(z.obj),delta=normAngle(target-current);pushUndo();z.obj.rotation=normAngle(Number(z.obj.rotation||0)+delta);renderAnnotations();renderSelection();showRibbon();positionRibbon();}
-function changeSegmentLength(kind,delta){const z=currentSelection();if(!z||z.kind!==kind)return;if(kind==='bond'&&isProtectedMolecularBond(z.obj)){status.textContent='Original molecular structure is read-only. Copy the bond first.';return;}pushUndo();const o=z.obj,e=kind==='bond'?bondVisualEndpoints(o):interactionEnds(o),mx=(e.x1+e.x2)/2,my=(e.y1+e.y2)/2,len=Math.hypot(e.x2-e.x1,e.y2-e.y1)||1,target=Math.max(8,len+delta),ux=(e.x2-e.x1)/len,uy=(e.y2-e.y1)/len;o.rotation=0;o.x1=mx-ux*target/2;o.y1=my-uy*target/2;o.x2=mx+ux*target/2;o.y2=my+uy*target/2;renderAnnotations();renderSelection();showRibbon();positionRibbon();}
-function deleteSelected(){const zs=selectedResolved().filter(editableAllowed);if(!zs.length){status.textContent='Delete: the original molecular structure is locked. Only independent graphic objects can be deleted.';return;}pushUndo();zs.forEach(removeEditableObject);selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';renderAnnotations();renderSelection();status.textContent=`Deleted ${zs.length} object${zs.length>1?'s':''}. Undo restores the deleted object${zs.length>1?'s':''}.`;
+function changeSegmentLength(kind,delta){const z=currentSelection();if(!z||z.kind!==kind)return;if(kind==='bond'&&isProtectedMolecularBond(z.obj)){status.textContent='Bond locked · Copy to edit';return;}pushUndo();const o=z.obj,e=kind==='bond'?bondVisualEndpoints(o):interactionEnds(o),mx=(e.x1+e.x2)/2,my=(e.y1+e.y2)/2,len=Math.hypot(e.x2-e.x1,e.y2-e.y1)||1,target=Math.max(8,len+delta),ux=(e.x2-e.x1)/len,uy=(e.y2-e.y1)/len;o.rotation=0;o.x1=mx-ux*target/2;o.y1=my-uy*target/2;o.x2=mx+ux*target/2;o.y2=my+uy*target/2;renderAnnotations();renderSelection();showRibbon();positionRibbon();}
+function deleteSelected(){const zs=selectedResolved().filter(editableAllowed);if(!zs.length){status.textContent='Object locked';return;}pushUndo();zs.forEach(removeEditableObject);selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';renderAnnotations();renderSelection();status.textContent=`Deleted ${zs.length} object${zs.length>1?'s':''}. Undo restores the deleted object${zs.length>1?'s':''}.`;
 }
 function nudgeSelected(dx,dy){const zs=selectedResolved().filter(editableAllowed);if(!zs.length)return;pushUndo();for(const z of zs){const o=z.obj;if(o.x!=null){o.x+=dx;o.y+=dy;}if(o.x1!=null){o.x1+=dx;o.x2+=dx;o.y1+=dy;o.y2+=dy;}}renderAnnotations();renderSelection();positionRibbon();}
 function reset(){state=clone(savedInitial);past=[];future=[];selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';molecule();moleculeCopyLayer();syncCanvasUI();renderAnnotations();renderSelection();}
@@ -919,8 +902,8 @@ function scaleSceneContent(scale,oldW,oldH,newW,newH){
   (state.arrows||[]).forEach(o=>{o.x1+=dx;o.y1+=dy;o.x2+=dx;o.y2+=dy;});
   if(l){l.x+=dx;l.y+=dy;l._originX+=dx;l._originY+=dy;}
 }
-function resizeCanvas(){status.textContent='Canvas resizing is disabled: the original molecular structure is immutable.';syncCanvasUI();}
-function changeBondWidth(){status.textContent='Molecular structure is locked; covalent bond style cannot be edited.';}
+function resizeCanvas(){status.textContent='Canvas locked';syncCanvasUI();}
+function changeBondWidth(){status.textContent='Molecule locked';}
 function changeInteractionWidth(){const v=clamp(Number(interactionWidth.value)||3.0,.7,8);state.style.interactionWidth=v;interactionWidthValue.textContent=v.toFixed(1);for(const o of state.interactions||[]){if(!o.customLineWidth)o.lineWidth=v;}renderAnnotations();renderSelection();}
 function commitBondWidth(){pushUndo();future=[];}
 function clearSelection(){selectedItems=[];selected=null;drag=null;ribbon.style.display='none';editPop.style.display='none';renderSelection();}
@@ -1108,7 +1091,7 @@ document.getElementById('pv-reset').onclick=reset;
 document.getElementById('pv-clear-selection').onclick=clearSelection;document.getElementById('pv-edit-apply').onclick=applyText;
 document.getElementById('pv-add-bond').onclick=addBond;document.getElementById('pv-add-interaction').onclick=addInteraction;document.getElementById('pv-add-distance').onclick=addDistance;document.getElementById('pv-add-text').onclick=addNote;document.getElementById('pv-add-arrow').onclick=addArrow;
 document.getElementById('pv-load-json').onclick=()=>document.getElementById('pv-layout-file').click();
-document.getElementById('pv-layout-file').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{loadLayoutObject(JSON.parse(r.result));status.textContent='Layout loaded successfully. Scientific molecular/PLIP layer remains locked.';}catch(err){alert('PanViz layout load failed: '+err.message);}e.target.value='';};r.readAsText(f);});
+document.getElementById('pv-layout-file').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{loadLayoutObject(JSON.parse(r.result));status.textContent='Layout loaded';}catch(err){alert('PanViz layout load failed: '+err.message);}e.target.value='';};r.readAsText(f);});
 cw.addEventListener('change',resizeCanvas);ch.addEventListener('change',resizeCanvas);
 interactionWidth.addEventListener('pointerdown',()=>{if(!styleUndoArmed){pushUndo();styleUndoArmed=true;}});interactionWidth.addEventListener('focus',()=>{if(!styleUndoArmed){pushUndo();styleUndoArmed=true;}});interactionWidth.addEventListener('input',changeInteractionWidth);interactionWidth.addEventListener('change',()=>{styleUndoArmed=false;});
 const stylePanel=document.getElementById('pv-style-panel');
