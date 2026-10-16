@@ -112,3 +112,16 @@ def test_panviz_wordmark_is_not_clipped_by_header_styles():
     assert "line-height:1.12!important" not in APP
     assert ".panviz-shell{padding:12px 16px!important;" in APP
     assert "overflow:visible!important" in APP
+
+
+def test_generated_panviz_logo_is_used_for_header_and_favicon():
+    logo_path = Path("assets/panviz_logo_icon.png")
+    assert logo_path.is_file()
+    assert logo_path.read_bytes().startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+    assert logo_path.stat().st_size > 1000
+    assert 'LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"' in APP
+    assert 'page_icon=Image.open(LOGO_PATH)' in APP
+    assert 'src="data:image/png;base64,{LOGO_BASE64}"' in APP
+    assert 'alt="PanViz logo"' in APP
+    assert 'class="pv-brand-logo"' in APP
+    assert 'page_icon="🧬"' not in APP
