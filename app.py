@@ -199,8 +199,8 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 /* PanViz UX workbench: structure setup in the sidebar, figure in the main pane. */
 .panviz-shell{padding:12px 16px!important;background:#fff!important;border-radius:13px!important;box-shadow:none!important;margin-bottom:10px!important;overflow:visible!important}
 .panviz-mark{width:38px!important;height:38px!important;background:#173d68!important;box-shadow:none!important;font-size:27px!important}
-.panviz-brand{display:flex;align-items:center;gap:10px;min-height:56px;overflow:visible}
-.pv-brand-logo{display:block;width:52px;height:52px;object-fit:contain;flex:0 0 52px}
+.panviz-brand{display:flex;align-items:center;gap:8px;min-height:46px;overflow:visible}
+.pv-brand-logo{display:block;width:36px;height:36px;object-fit:contain;flex:0 0 36px}
 .panviz-title{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;row-gap:0;min-height:46px;box-sizing:border-box;overflow:visible!important;font-size:1.65rem!important;letter-spacing:-.025em!important;line-height:1.5!important}
 .pv-wordmark{display:inline-block;line-height:1.5;padding:1px 0;white-space:nowrap}
 .pv-version{display:inline-block;font-size:12px;font-weight:700;color:#5e7692;letter-spacing:0;line-height:1.5;vertical-align:baseline;white-space:nowrap;align-self:center}
