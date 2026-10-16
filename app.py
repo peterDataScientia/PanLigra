@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 import json
 import hashlib
+import base64
 import zipfile
 from datetime import datetime, timezone
 print("APPCHK 01 — stdlib imports OK", flush=True)
@@ -15,6 +16,7 @@ print("APPCHK 02 — pandas import OK", flush=True)
 import streamlit as st
 print("APPCHK 03 — streamlit import OK", flush=True)
 import streamlit.components.v1 as components
+from PIL import Image
 print("APPCHK 04 — streamlit components import OK", flush=True)
 
 # Streamlit Cloud/Linux native-library load-order guard:
@@ -34,7 +36,9 @@ import rcsb_pdb
 print("APPCHK 07 — interactive_engine + v6 scientific data layer import OK", flush=True)
 
 print("APPCHK 08 — before set_page_config", flush=True)
-st.set_page_config(page_title=f"PanViz v{PANVIZ_VERSION}", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
+LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"
+LOGO_BASE64 = base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
+st.set_page_config(page_title=f"PanViz v{PANVIZ_VERSION}", page_icon=Image.open(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")
 print("APPCHK 09 — set_page_config OK", flush=True)
 print("APPCHK 10 — before main CSS markdown", flush=True)
 st.markdown("""
@@ -195,7 +199,8 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 /* PanViz UX workbench: structure setup in the sidebar, figure in the main pane. */
 .panviz-shell{padding:12px 16px!important;background:#fff!important;border-radius:13px!important;box-shadow:none!important;margin-bottom:10px!important;overflow:visible!important}
 .panviz-mark{width:38px!important;height:38px!important;background:#173d68!important;box-shadow:none!important;font-size:27px!important}
-.panviz-brand{display:flex;align-items:center;min-height:48px;overflow:visible}
+.panviz-brand{display:flex;align-items:center;gap:10px;min-height:56px;overflow:visible}
+.pv-brand-logo{display:block;width:52px;height:52px;object-fit:contain;flex:0 0 52px}
 .panviz-title{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;row-gap:0;min-height:46px;box-sizing:border-box;overflow:visible!important;font-size:1.65rem!important;letter-spacing:-.025em!important;line-height:1.5!important}
 .pv-wordmark{display:inline-block;line-height:1.5;padding:1px 0;white-space:nowrap}
 .pv-version{display:inline-block;font-size:12px;font-weight:700;color:#5e7692;letter-spacing:0;line-height:1.5;vertical-align:baseline;white-space:nowrap;align-self:center}
@@ -212,7 +217,7 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
 print("APPCHK 12 — before PanViz header markdown", flush=True)
-st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><div class="panviz-title"><span class="pv-wordmark">PanViz</span><span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
+st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><img class="pv-brand-logo" src="data:image/png;base64,{LOGO_BASE64}" alt="PanViz logo"><div class="panviz-title"><span class="pv-wordmark">PanViz</span><span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
 print("APPCHK 13 — PanViz header markdown OK", flush=True)
 
 print("APPCHK 14 — before editor.html read", flush=True)
