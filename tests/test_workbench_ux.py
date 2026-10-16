@@ -80,3 +80,13 @@ def test_editor_has_no_embedded_manual_sections():
     ]
     for phrase in manual_phrases:
         assert phrase not in EDITOR
+
+
+def test_main_workspace_has_no_decorative_placeholder_or_spinner_manual_text():
+    assert 'panviz-title' in APP
+    assert 'No structure loaded' not in APP
+    assert 'workspace_empty' not in APP
+    assert 'pv-empty-workspace' not in APP
+    assert '⬡' not in APP
+    assert 'Analyzing interactions…' not in APP
+    assert 'with st.spinner(" "):' in APP
