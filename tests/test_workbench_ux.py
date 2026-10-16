@@ -117,7 +117,7 @@ def test_panviz_wordmark_is_not_clipped_by_header_styles():
 def test_generated_panviz_logo_is_used_for_header_and_favicon():
     logo_path = Path("assets/panviz_logo_icon.png")
     assert logo_path.is_file()
-    assert logo_path.read_bytes().startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+    assert logo_path.read_bytes()[:8] == bytes.fromhex("89504e470d0a1a0a")
     assert logo_path.stat().st_size > 1000
     assert 'LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"' in APP
     assert 'page_icon=Image.open(LOGO_PATH)' in APP
