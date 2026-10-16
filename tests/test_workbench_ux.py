@@ -125,3 +125,9 @@ def test_generated_panviz_logo_is_used_for_header_and_favicon():
     assert 'alt="PanViz logo"' in APP
     assert 'class="pv-brand-logo"' in APP
     assert 'page_icon="🧬"' not in APP
+
+
+def test_header_logo_stays_compact():
+    assert ".pv-brand-logo{display:block;width:36px;height:36px;" in APP
+    assert "flex:0 0 36px" in APP
+    assert ".panviz-brand{display:flex;align-items:center;gap:8px;min-height:46px;" in APP
