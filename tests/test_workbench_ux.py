@@ -101,3 +101,14 @@ def test_editor_iframe_and_interaction_table_are_accessible():
     assert 'if(isOpen)interactionTableWrap.scrollTop=0;' in EDITOR
     assert "document.body?.scrollHeight||0" not in EDITOR
     assert "document.documentElement?.scrollHeight||0" not in EDITOR
+
+
+def test_panviz_wordmark_is_not_clipped_by_header_styles():
+    assert '<span class="pv-wordmark">PanViz</span>' in APP
+    assert '<span class="pv-version">v{PANVIZ_VERSION}</span>' in APP
+    assert ".panviz-title{display:flex;align-items:center;flex-wrap:wrap;" in APP
+    assert "min-height:46px" in APP
+    assert "line-height:1.5!important" in APP
+    assert "line-height:1.12!important" not in APP
+    assert ".panviz-shell{padding:12px 16px!important;" in APP
+    assert "overflow:visible!important" in APP

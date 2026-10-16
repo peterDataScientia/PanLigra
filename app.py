@@ -193,10 +193,12 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 }
 
 /* PanViz UX workbench: structure setup in the sidebar, figure in the main pane. */
-.panviz-shell{padding:13px 17px!important;background:#fff!important;border-radius:13px!important;box-shadow:none!important;margin-bottom:10px!important}
+.panviz-shell{padding:12px 16px!important;background:#fff!important;border-radius:13px!important;box-shadow:none!important;margin-bottom:10px!important;overflow:visible!important}
 .panviz-mark{width:38px!important;height:38px!important;background:#173d68!important;box-shadow:none!important;font-size:27px!important}
-.panviz-title{font-size:1.65rem!important;letter-spacing:-.04em!important;line-height:1.12!important}
-.pv-version{font-size:12px;font-weight:700;color:#5e7692;letter-spacing:0;vertical-align:middle}
+.panviz-brand{display:flex;align-items:center;min-height:48px;overflow:visible}
+.panviz-title{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;row-gap:0;min-height:46px;box-sizing:border-box;overflow:visible!important;font-size:1.65rem!important;letter-spacing:-.025em!important;line-height:1.5!important}
+.pv-wordmark{display:inline-block;line-height:1.5;padding:1px 0;white-space:nowrap}
+.pv-version{display:inline-block;font-size:12px;font-weight:700;color:#5e7692;letter-spacing:0;line-height:1.5;vertical-align:baseline;white-space:nowrap;align-self:center}
 .panviz-subtitle{font-size:13px!important;margin-top:1px!important}
 .pv-header-note{margin-left:auto;align-self:center;color:#476079;font-size:12px;font-weight:650}
 .pv-workspace-intro{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding:8px 1px 12px;color:#41566e;font-size:13px;font-weight:500}
@@ -204,13 +206,13 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 [data-testid="stSidebar"] .block-container{padding-top:1rem;padding-bottom:2rem}
 [data-testid="stSidebar"] h3{font-size:17px;font-weight:750;color:#1d3550}
 [data-testid="stSidebar"] [data-testid="stFileUploader"]{background:#fff;border-radius:10px}
-@media(max-width:900px){.pv-header-note{display:none}.panviz-title{font-size:1.4rem!important}}
+@media(max-width:900px){.panviz-title{font-size:1.4rem!important;line-height:1.5!important;min-height:42px}}
 
 </style>
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
 print("APPCHK 12 — before PanViz header markdown", flush=True)
-st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><div class="panviz-title">PanViz <span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
+st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><div class="panviz-title"><span class="pv-wordmark">PanViz</span><span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
 print("APPCHK 13 — PanViz header markdown OK", flush=True)
 
 print("APPCHK 14 — before editor.html read", flush=True)
