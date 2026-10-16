@@ -40,7 +40,7 @@ print("APPCHK 10 — before main CSS markdown", flush=True)
 st.markdown("""
 <style>
 :root{--pv-navy:#143761;--pv-blue:#1f5aa6;--pv-ink:#16243a;--pv-muted:#65748b;--pv-line:#dce4ef}
-.block-container{padding-top:1.2rem;padding-bottom:2.2rem;max-width:1520px}
+.block-container{padding-top:1rem;padding-bottom:1.5rem;max-width:1800px}
 .panviz-shell{border:1px solid #dbe3ee;border-radius:18px;padding:18px 20px 16px;background:linear-gradient(135deg,#f7faff 0%,#ffffff 52%,#f4f7fb 100%);box-shadow:0 8px 28px rgba(24,54,90,.07);margin-bottom:16px}
 .panviz-brand{display:flex;align-items:center;gap:12px}
 .panviz-mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:white;font-size:22px;font-weight:800;background:linear-gradient(135deg,#1d5da9,#143761);box-shadow:0 5px 14px rgba(20,55,97,.24)}
@@ -230,14 +230,10 @@ def render_editor(scene):
       const reportHeight = () => {
         const root = document.getElementById('pv-root');
         if (!root) return;
-        const rect = root.getBoundingClientRect();
-        const height = Math.ceil(Math.max(
-          rect.bottom,
-          root.scrollHeight,
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight
-        ) + 4);
-        if (Math.abs(height - lastHeight) < 2) return;
+        // Measure content, not the iframe viewport: measuring body/document
+        // scrollHeight creates a feedback loop when the host resizes the frame.
+        const height = Math.ceil(root.getBoundingClientRect().bottom + window.scrollY + 16);
+        if (Math.abs(height - lastHeight) < 6) return;
         lastHeight = height;
         window.parent.postMessage({
           isStreamlitMessage: true,
@@ -246,15 +242,15 @@ def render_editor(scene):
         }, '*');
       };
 
+      window.panvizResizeHost = reportHeight;
       window.addEventListener('load', () => {
         reportHeight();
-        setTimeout(reportHeight, 100);
-        setTimeout(reportHeight, 400);
+        setTimeout(reportHeight, 80);
+        setTimeout(reportHeight, 350);
       });
 
       if ('ResizeObserver' in window) {
         const observer = new ResizeObserver(reportHeight);
-        observer.observe(document.documentElement);
         const root = document.getElementById('pv-root');
         if (root) observer.observe(root);
       }
@@ -280,11 +276,12 @@ def render_editor(scene):
     """
     html = html + autosize_script
 
-    # A compact initial height is used only until the editor reports its
-    # measured height above.
+    # Allow enough room for the canvas and expanded records table from first
+    # paint. Frame auto-sizing normally removes unused space, while scrolling
+    # remains enabled if the host does not accept a height update.
     canvas_h = int(scene.get("height", 850) or 850)
-    initial_h = max(640, min(1800, canvas_h + 120))
-    components.html(html, height=initial_h, scrolling=False)
+    initial_h = max(1200, min(2300, canvas_h + 660))
+    components.html(html, height=initial_h, scrolling=True)
 
 def _eligible_binding_sites(pdb_path):
     mol = PDBComplex(); mol.load_pdb(str(pdb_path)); excluded={"ARN","ASH","GLH","LYN","HIE","HIP"}
@@ -790,7 +787,6 @@ result=st.session_state.get("panviz_result")
 if not result or result.get("key")!=result_key:
     st.stop()
 
-st.markdown("### Editor")
 render_editor(result["scene"])
 
 

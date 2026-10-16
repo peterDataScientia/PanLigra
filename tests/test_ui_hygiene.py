@@ -56,7 +56,9 @@ def test_editor_resizes_without_nested_scrollbars():
     app = Path("app.py").read_text(encoding="utf-8")
     editor = Path("editor.html").read_text(encoding="utf-8")
 
-    assert "scrolling=False" in app
+    assert "scrolling=True" in app
+    assert "canvas_h + 660" in app
+    assert "document.body.scrollHeight" not in app
     assert "MutationObserver" in app
     assert "function requestHostResize()" in editor
     assert "requestHostResize();" in editor
@@ -65,7 +67,10 @@ def test_editor_resizes_without_nested_scrollbars():
 
 def test_live_interaction_table_has_vertical_scroll_fallback():
     editor = Path("editor.html").read_text(encoding="utf-8")
-    assert "#pv-interaction-table-wrap{display:none;overflow:auto;max-height:min(420px,45vh)}" in editor
+    assert "#pv-interaction-table-wrap{display:none;width:100%;max-height:460px;overflow-x:auto;overflow-y:auto;" in editor
+    assert "overscroll-behavior:contain" in editor
+    assert "#pv-interaction-table{width:100%;min-width:680px;" in editor
+    assert "window.panvizResizeHost" in editor
     assert "#pv-interaction-records.open #pv-interaction-table-wrap{display:block}" in editor
     assert "#pv-interaction-table th{position:sticky;top:0;" in editor
 

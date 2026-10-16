@@ -54,7 +54,8 @@ def test_locked_molecular_workflow_not_modified():
     assert "LOCKED — ORIGINAL CHEMICAL STRUCTURE" in EDITOR
     assert "Professional object controls" not in EDITOR
     assert "Edits change presentation, not detected PLIP interactions." not in EDITOR
-    assert "scrolling=False" in APP
+    assert "scrolling=True" in APP
+    assert 'st.markdown("### Editor")' not in APP
 
 
 def test_app_clears_manual_style_prompts():
@@ -90,3 +91,13 @@ def test_main_workspace_has_no_decorative_placeholder_or_spinner_manual_text():
     assert '⬡' not in APP
     assert 'Analyzing interactions…' not in APP
     assert 'with st.spinner(" "):' in APP
+
+
+def test_editor_iframe_and_interaction_table_are_accessible():
+    assert 'initial_h = max(1200, min(2300, canvas_h + 660))' in APP
+    assert 'components.html(html, height=initial_h, scrolling=True)' in APP
+    assert '#pv-interaction-table{width:100%;min-width:680px;' in EDITOR
+    assert 'overscroll-behavior:contain' in EDITOR
+    assert 'if(isOpen)interactionTableWrap.scrollTop=0;' in EDITOR
+    assert "document.body?.scrollHeight||0" not in EDITOR
+    assert "document.documentElement?.scrollHeight||0" not in EDITOR
