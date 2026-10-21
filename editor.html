@@ -41,7 +41,7 @@
 .pv-rotate-line{stroke:#2563eb;stroke-width:1.2;stroke-dasharray:3 2;pointer-events:none}
 .pv-rotate-handle{fill:#2563eb;stroke:#fff;stroke-width:1.4;cursor:crosshair}
 .pv-selected-line{stroke:#2563eb;stroke-width:7;opacity:.28;pointer-events:none}.pv-endpoint-handle{fill:#fff;stroke:#2563eb;stroke-width:2;cursor:crosshair}
-#pv-ribbon{position:absolute;display:none;z-index:100;min-width:260px;max-width:calc(100% - 12px);background:#fff;border:1px solid #cfd5dc;border-radius:8px;box-shadow:0 7px 22px rgba(0,0,0,.14);padding:6px;pointer-events:auto}
+#pv-ribbon{position:relative;display:none;z-index:1;width:100%;min-width:0;max-width:100%;box-sizing:border-box;background:#fff;border:1px solid #cfd5dc;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.08);padding:6px;pointer-events:auto;margin:8px 0;overflow-x:auto}
 #pv-ribbon .row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 #pv-ribbon button,#pv-ribbon select,#pv-ribbon input{height:28px;border:1px solid #d1d5db;background:#fff;border-radius:5px;padding:4px 7px;font-size:12px}
 #pv-ribbon button{cursor:pointer;min-width:28px}
@@ -225,10 +225,11 @@
 <div id="pv-wrap">
   <div id="pv-stage">
     <svg id="pv-svg-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
-    <div id="pv-ribbon"></div>
+    
     <div id="pv-edit-pop"><input id="pv-edit-input" type="text"><button id="pv-edit-apply">Apply</button></div>
   </div>
 </div>
+<div id="pv-ribbon" role="toolbar" aria-label="Selected object editing tools"></div>
 <div id="pv-interaction-records">
   <div class="head">
     <div>
@@ -732,7 +733,13 @@ function showRibbon(){
   const count=document.createElement('span');count.className='muted';if(selectedItems.length>1)count.textContent=`${selectedItems.length} selected`;row.append(copy,dup,paste,cut,del);if(selectedItems.length>1)row.append(count);ribbon.appendChild(row);ribbon.style.display='block';positionRibbon();
 }
 function ribbonAnchor(z){const o=z.obj;if(z.kind==='moleculeBond'){const a=molecularAtomById(o.a),b=molecularAtomById(o.b);if(a&&b)return{x:(a.x+b.x)/2,y:(a.y+b.y)/2,w:Math.abs(b.x-a.x),h:Math.abs(b.y-a.y)};return{x:state.width/2,y:state.height/2,w:40,h:20};}if(z.kind==='interaction'||z.kind==='arrow'||z.kind==='bond'){const e=z.kind==='bond'?bondVisualEndpoints(o):interactionEnds(o);return{x:(e.x1+e.x2)/2,y:(e.y1+e.y2)/2,w:Math.abs(e.x2-e.x1),h:Math.abs(e.y2-e.y1)};}if(z.kind==='legend')return{x:o.x,y:o.y,w:o.w||160,h:o.h||30};return{x:o.x,y:o.y,w:o.w||90,h:o.h||18};}
-function positionRibbon(){const z=currentSelection();if(!z||ribbon.style.display==='none'||drag)return;const a=ribbonAnchor(z),rb=ribbon.getBoundingClientRect(),sr=stage.getBoundingClientRect(),vr=svg.getBoundingClientRect();const scaleX=vr.width/state.width,scaleY=vr.height/state.height,baseX=vr.left-sr.left,baseY=vr.top-sr.top,px=baseX+a.x*scaleX,py=baseY+a.y*scaleY,ow=a.w*scaleX,oh=a.h*scaleY,gap=12;const stageW=stage.clientWidth,stageH=Math.max(stage.clientHeight,vr.height);const candidates=[{left:px+ow/2+gap,top:py-rb.height/2},{left:px-ow/2-rb.width-gap,top:py-rb.height/2},{left:px-rb.width/2,top:py-oh/2-rb.height-gap},{left:px-rb.width/2,top:py+oh/2+gap}];const chosen=candidates.find(c=>c.left>=6&&c.top>=6&&c.left+rb.width<=stageW-6&&c.top+rb.height<=stageH-6)||candidates[2];ribbon.style.left=clamp(chosen.left,6,Math.max(6,stageW-rb.width-6))+'px';ribbon.style.top=clamp(chosen.top,6,Math.max(6,stageH-rb.height-6))+'px';}
+// The contextual editor is docked after the canvas, never over scientific content.
+function positionRibbon(){
+  if(!currentSelection() || ribbon.style.display==='none')return;
+  ribbon.style.left='auto';
+  ribbon.style.top='auto';
+}
+
 function updateSelectedInteractionDom(){const z=currentSelection();if(!z||z.kind!=='interaction')return;const grp=layers.annotations.querySelector(`#pv-annotations-interactions [data-object-type="interaction"][data-object-id="${keyEscape(z.obj.id)}"]`);const line=grp?.querySelector('line:not(.pv-hit)');if(line){const st=interactionStyle(z.obj);line.setAttribute('stroke-width',st.width);line.setAttribute('stroke',st.color);line.setAttribute('stroke-dasharray',st.dash);}renderSelection();}
 function toggleTextStyle(prop){const z=currentSelection();if(!z)return;pushUndo();z.obj[prop]=!z.obj[prop];z.obj.styleOverrides=z.obj.styleOverrides||{};if(prop==='bold')z.obj.styleOverrides.fontWeight=z.obj.bold?700:400;measure(z.obj,z.kind==='label'?z.obj.text:z.obj.displayText);renderAnnotations();renderSelection();showRibbon();positionRibbon();}
 function setFontSize(v){const z=currentSelection();if(!z||!(z.kind==='label'||z.kind==='distance'||z.kind==='note'))return;pushUndo();z.obj.fontSize=clamp(Number(v)||16,6,72);z.obj.styleOverrides=z.obj.styleOverrides||{};z.obj.styleOverrides.fontSize=z.obj.fontSize;measure(z.obj,z.kind==='label'?z.obj.text:z.obj.displayText);renderAnnotations();renderSelection();showRibbon();positionRibbon();}
