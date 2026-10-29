@@ -121,6 +121,8 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+On Windows, use `run_panligra.bat` to launch the same Streamlit application. The historical `run_panviz.bat` launcher is still supported.
+
 PyMOL is not required for the web editor path.
 
 ## Command-line renderer
