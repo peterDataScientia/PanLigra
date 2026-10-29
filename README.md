@@ -1,6 +1,6 @@
-# PanLigra v6.0.0
+# PanLigra v1.0.0
 
-PanLigra is a PLIP-based protein–ligand interaction visualization workflow with a publication-oriented SVG editor. **PanLigra 6.0 modernizes the scientific-data and application architecture while preserving the approved molecule/residue publication style and extending the interaction layer to all eight PLIP classes.** The scientific molecular layer is locked; presentation annotations are editable without changing the underlying PLIP interaction measurements.
+PanLigra is a PLIP-based protein–ligand interaction visualization workflow with a publication-oriented SVG editor. **PanLigra 1.0 provides the scientific-data and application architecture while preserving the approved molecule/residue publication style and extending the interaction layer to all eight PLIP classes.** The scientific molecular layer is locked; presentation annotations are editable without changing the underlying PLIP interaction measurements.
 
 ## License
 
@@ -14,7 +14,7 @@ PanLigra directly integrates the Protein–Ligand Interaction Profiler (PLIP 3.0
 
 PanLigra is the public-facing name of the software formerly called PanViz Interactive. The PLIP scientific analysis, locked molecular rendering layer, saved `.panviz.json` layouts, internal APIs and existing `PanViz_*` project files remain supported. The rename does not change interaction detection, measurements, or scientific-record signatures.
 
-## What is complete in v6.0.0
+## Features in PanLigra v1.0.0
 
 ### Input
 - **PDB complex**: upload a complete protein–ligand `.pdb` complex **or search the RCSB Protein Data Bank directly** by keywords, protein name, ligand name/ID, or PDB accession. Browse entry titles, methods, resolution, and nonpolymer counts before importing.
@@ -41,7 +41,7 @@ PanLigra is the public-facing name of the software formerly called PanViz Intera
 - Original interaction distances remain separate from editable display text.
 - Duplicate residue→ligand-atom interaction records remain separate and are automatically weighted by multiplicity.
 
-### v6 architecture upgrades
+### Architecture and data management
 - Central version reporting from `VERSION.txt`.
 - One temporary workspace per Streamlit session instead of one new directory per rerun.
 - Docking/PDBQT ligand serials start after the receptor maximum atom serial, preventing atom-ID collisions.
