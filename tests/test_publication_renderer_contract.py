@@ -39,7 +39,7 @@ def approx(value, expected, tolerance=0.5):
 
 
 def test_publication_geometry_matches_approved_golden_layout():
-    layout = interactive_engine._exact_panviz_layout(
+    layout = interactive_engine._exact_panligra_layout(
         DATA_POINTS,
         CONNECTIONS,
         GOLDEN["canvas"]["width"],
@@ -129,7 +129,7 @@ def test_visual_renderer_files_exist_and_legacy_geometry_is_active():
     assert Path("utils.py").exists()
     assert Path("interactive_engine.py").exists()
     assert hasattr(utils, "_draw_mol")
-    assert hasattr(interactive_engine, "_exact_panviz_layout")
+    assert hasattr(interactive_engine, "_exact_panligra_layout")
 
 
 def test_all_eight_plip_interaction_classes_are_supported():

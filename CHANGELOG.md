@@ -1,8 +1,8 @@
 # PanLigra public-brand transition
 
-- Adopted **PanLigra** as the public-facing name for the former PanViz Interactive software.
+- Adopted **PanLigra** as the public-facing name for the former PanLigra Interactive software.
 - Updated the Streamlit header, editor copy, command-line labels and primary documentation without changing protein–ligand interaction detection or protected molecular-figure geometry.
-- Added `PanLigra.py` as the preferred CLI while retaining `PanViz.py`, `.panviz.json`, `PanViz_*` project file paths and internal identifiers for backward compatibility.
+- Added `PanLigra.py` as the preferred CLI while retaining `PanLigra.py`, `.panligra.json`, `PanLigra_*` project file paths and internal identifiers for backward compatibility.
 - This is a branding update only; it is not a new scientific validation or a change to algorithmic results.
 
 # v6.0.0 — Architecture Upgrade + Eight-Class Interaction Rendering
@@ -12,13 +12,13 @@
 - Replaced the duplicate Streamlit interaction tables with one live interaction table inside the editor.
 - The live table combines immutable PLIP-detected interactions with editor-created interactions; manual rows are marked **Manually added**.
 - Removed separate static PNG/SVG download buttons from the Streamlit page; publication exports now come directly from the editor.
-- Promoted the application to PanViz 6.0.0 while preserving the approved ligand depiction, residue placement, typography, canvas balance, and the existing HPI/HB/SB/PS/PC visual styles from baseline commit `237db30af8639379ed3976657f9bbcce28110725`.
+- Promoted the application to PanLigra 6.0.0 while preserving the approved ligand depiction, residue placement, typography, canvas balance, and the existing HPI/HB/SB/PS/PC visual styles from baseline commit `237db30af8639379ed3976657f9bbcce28110725`.
 - Extended only the interaction layer to render all eight PLIP classes, adding water bridges (WB), halogen bonds (XB), and metal coordination (MC) with distinct publication-style colors and dash patterns.
 - Added a canonical scientific-record layer that preserves all eight PLIP interaction classes and exports unified CSV/JSON records.
 - Added a presentation-independent SHA-256 scientific-record signature to project manifests.
 - Fixed PDBQT complex assembly so ligand atom serials begin after the receptor maximum serial.
 - Reused one temporary workspace per Streamlit session instead of creating a new directory on every rerun.
-- Centralized version loading through `VERSION.txt` / `panviz_version.py`.
+- Centralized version loading through `VERSION.txt` / `panligra_version.py`.
 - Made PyMOL opt-in for the command-line workflow.
 - Added automated v6 architecture tests alongside the golden publication-renderer regression guard.
 - Legacy five-class golden geometry remains regression-protected; the three new classes are additive interaction-layer extensions rather than a redesign of the molecule/residue renderer.
@@ -41,7 +41,7 @@
 - Added dynamic bond/interaction expand and compress controls.
 - Added contextual bond order/color/width/dash/direction controls.
 
-# PanViz Interactive v5.8.7
+# PanLigra Interactive v5.8.7
 
 ## v5.8.7 — molecular structure hard lock
 - Restored the original covalent molecular renderer directly from immutable atom coordinates and bond topology.
@@ -51,7 +51,7 @@
 - Legacy `bondEdits` are discarded when migrating or loading layouts.
 - Presentation annotations remain independently editable.
 
-# PanViz Interactive v5.8.2
+# PanLigra Interactive v5.8.2
 
 ## Independent figure editing
 - Existing covalent bonds get independent graphical twins derived from immutable chemical topology.
@@ -88,7 +88,7 @@
 
 ## v5.7.12
 
-- Matched edited PNG export to the original PanViz SVG/PNG canvas dimensions.
+- Matched edited PNG export to the original PanLigra SVG/PNG canvas dimensions.
 - Removed the 4× edited PNG raster path that could make exported stroke hierarchy differ from the original figure.
 - Kept high-quality browser image smoothing for SVG-to-PNG rasterization.
 - SVG export remains vector.
@@ -123,7 +123,7 @@
 - Fixed `WinError 32` during docking PDBQT pose preparation by explicitly closing the Windows file descriptor returned by `tempfile.mkstemp()` before Open Babel access and cleanup.
 - Temporary pose files are now safely removable after conversion.
 
-# PanViz Interactive v5.7.3
+# PanLigra Interactive v5.7.3
 
 ## v5.7.3 export-quality correction
 
@@ -148,7 +148,7 @@
 - Added 4× PNG export while preserving SVG as the primary vector export.
 - Fixed ligand atom labels to correctly follow the covalent bond color when the linked mode is selected.
 
-# PanViz Interactive v5.6
+# PanLigra Interactive v5.6
 
 - Compact STRING-inspired 3D bubble residue nodes; node diameter is independent of font size.
 - Added polished editor/app styling.
@@ -171,7 +171,7 @@
 - Added persistent Streamlit result state so generated results remain available until the selected input/pose/site/canvas parameters change.
 - Added Vina pose-score display when `REMARK VINA RESULT` records are present.
 - Added complete project ZIP download containing original inputs, prepared structure, figures, interaction CSVs, initial layout, and manifest.
-- Added portable `.panviz.json` layout loading with site and ligand atom-fingerprint validation.
+- Added portable `.panligra.json` layout loading with site and ligand atom-fingerprint validation.
 - Added free text annotations with move, rotate, style, delete, undo/redo, save, load, and export support.
 - Added arrow annotations with move, rotate, color, width, dash style, delete, save, load, and export support.
 - Added 1×/2×/4×/6× PNG export scale controls while retaining vector SVG export.

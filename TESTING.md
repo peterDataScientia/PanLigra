@@ -21,7 +21,7 @@ These checks are intended to preserve rendered behavior while still allowing imp
 
 ---
 
-# PanViz Interactive v5.8.7 — Testing and validation
+# PanLigra Interactive v5.8.7 — Testing and validation
 
 ## v5.8.7 molecular hard-lock checks
 - Molecular covalent bonds are rendered directly from immutable `state.bonds`.
@@ -47,10 +47,10 @@ These checks are intended to preserve rendered behavior while still allowing imp
 ## General validation notes
 
 Static checks completed:
-- Python syntax compilation for `app.py`, `interactive_engine.py`, `PanViz.py`, and `utils.py`.
+- Python syntax compilation for `app.py`, `interactive_engine.py`, `PanLigra.py`, and `utils.py`.
 - Embedded editor JavaScript syntax check with Node.js.
 
-Interactive editor smoke test completed with Chromium + Playwright using a representative PanViz scene:
+Interactive editor smoke test completed with Chromium + Playwright using a representative PanLigra scene:
 - molecule layer present once
 - residue selection and contextual ribbon
 - residue font-size change
@@ -115,13 +115,13 @@ The complete Streamlit + PLIP runtime was not executed in this build environment
 - This restores automatic thickening even when an older saved layout has no explicit `multiplicity` field.
 
 ### v5.8.0 completion checks
-- Python syntax check passes for `app.py`, `interactive_engine.py`, `utils.py`, and `PanViz.py`.
+- Python syntax check passes for `app.py`, `interactive_engine.py`, `utils.py`, and `PanLigra.py`.
 - Embedded editor JavaScript passes `node --check`.
 - Browser smoke test verifies one locked molecule layer and one interaction layer.
 - Browser smoke test verifies creation and editing of free text annotations.
 - Browser smoke test verifies creation of arrow annotations.
-- Browser smoke test verifies `.panviz.json` export contains notes, arrows, and scientific data.
-- Browser smoke test verifies `.panviz.json` reload restores saved annotation state after a later modification.
+- Browser smoke test verifies `.panligra.json` export contains notes, arrows, and scientific data.
+- Browser smoke test verifies `.panligra.json` reload restores saved annotation state after a later modification.
 - Browser smoke test verifies SVG export excludes editor-only hit targets/UI.
 - Browser smoke test verifies default 4× PNG export produces a 3600×2600 image for a 900×650 test scene.
 - Browser smoke test reports no page or console errors.
@@ -142,7 +142,7 @@ Validated in Chromium with a synthetic scene: existing bond rendering, new bond 
 
 
 ## v5.8.7 professional object-editor checks
-- Python source files pass `py_compile` for `app.py`, `interactive_engine.py`, `utils.py`, and `PanViz.py`.
+- Python source files pass `py_compile` for `app.py`, `interactive_engine.py`, `utils.py`, and `PanLigra.py`.
 - Embedded editor JavaScript passes `node --check`.
 - Original molecular atoms and covalent bonds remain byte-for-byte unchanged after attempted source-bond drag and all presentation editing operations.
 - Original covalent bonds expose zero endpoint-edit handles and can only be selected as copy sources.

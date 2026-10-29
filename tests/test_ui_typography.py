@@ -1,4 +1,4 @@
-"""Readable UI typography contract, without touching the locked PanViz figure."""
+"""Readable UI typography contract, without touching the locked PanLigra figure."""
 from pathlib import Path
 import tomllib
 
@@ -51,7 +51,7 @@ def test_text_contrast_exceeds_wcag_aa_normal_text_threshold():
 
 
 def test_streamlit_typography_has_explicit_weights_and_focus_visibility():
-    assert "PanViz reading hierarchy:" in APP
+    assert "PanLigra reading hierarchy:" in APP
     assert '[data-testid="stWidgetLabel"] p' in APP
     assert 'font-weight:700!important' in APP
     assert '[data-testid="stRadio"] label p' in APP

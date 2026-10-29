@@ -70,7 +70,7 @@ def test_live_interaction_table_has_vertical_scroll_fallback():
     assert "#pv-interaction-table-wrap{display:none;width:100%;max-height:460px;overflow-x:auto;overflow-y:auto;" in editor
     assert "overscroll-behavior:contain" in editor
     assert "#pv-interaction-table{width:100%;min-width:680px;" in editor
-    assert "window.panvizResizeHost" in editor
+    assert "window.panligraResizeHost" in editor
     assert "#pv-interaction-records.open #pv-interaction-table-wrap{display:block}" in editor
     assert "#pv-interaction-table th{position:sticky;top:0;" in editor
 
@@ -117,7 +117,7 @@ def test_pdf_export_preserves_unicode_greek_symbols():
 
     assert "π-Stacking" in editor
     assert "π-Cation" in editor
-    assert "PANVIZ_PDF_FONT_FAMILY='PanVizLiberationSans'" in editor
+    assert "PANLIGRA_PDF_FONT_FAMILY='PanLigraLiberationSans'" in editor
     assert "Identity-H" in editor
     assert "registerPdfUnicodeFonts(pdf)" in editor
     assert "applyPdfUnicodeFont(svgNode)" in editor

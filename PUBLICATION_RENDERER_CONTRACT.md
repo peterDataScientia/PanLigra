@@ -1,6 +1,6 @@
-# PanViz Publication Renderer Contract
+# PanLigra Publication Renderer Contract
 
-The current molecule, residue, interaction, distance-label and legend appearance is a protected PanViz asset.
+The current molecule, residue, interaction, distance-label and legend appearance is a protected PanLigra asset.
 
 ## Protected visual behavior
 
@@ -27,7 +27,7 @@ Safety branch:
 
 `publication-renderer-baseline-2026-10-01`
 
-The approved PanViz 6 eight-class renderer baseline is:
+The approved PanLigra 6 eight-class renderer baseline is:
 
 `3c6a3390f65c5f30ccb367b52cf916cd5683d0e6`
 
@@ -40,7 +40,7 @@ The legacy baseline remains the reference for proving that HPI/HB/SB/PS/PC molec
 At the renderer baseline:
 
 - `utils.py::_draw_mol` defines the static publication renderer.
-- `interactive_engine.py::_exact_panviz_layout` reproduces its established residue, interaction and distance geometry for the editor.
+- `interactive_engine.py::_exact_panligra_layout` reproduces its established residue, interaction and distance geometry for the editor.
 
 ## Regression strategy
 
@@ -53,14 +53,14 @@ These checks protect output behavior rather than the names of implementation fun
 
 ## Development principle
 
-> Improve PanViz around the renderer; do not casually redesign the renderer.
+> Improve PanLigra around the renderer; do not casually redesign the renderer.
 
 A visual change should be treated as a scientific/publication design decision, not as a side effect of code cleanup.
 
 
-## PanViz 6 approved interaction-layer extension
+## PanLigra 6 approved interaction-layer extension
 
-PanViz 6 deliberately extends the interaction vocabulary from five to all eight PLIP classes while preserving the pre-existing molecule and residue design.
+PanLigra 6 deliberately extends the interaction vocabulary from five to all eight PLIP classes while preserving the pre-existing molecule and residue design.
 
 The following legacy visual rules remain unchanged for HPI, HB, SB, PS and PC:
 - ligand depiction and covalent bond styling;
