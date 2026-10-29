@@ -33,7 +33,7 @@ from interactive_engine import build_editor_scene
 from scientific_records import build_scientific_records, build_figure_records, write_scientific_exports
 from panviz_version import PANVIZ_VERSION, PANVIZ_RENDERER_REVISION
 import rcsb_pdb
-print("APPCHK 07 — interactive_engine + v6 scientific data layer import OK", flush=True)
+print("APPCHK 07 — interactive_engine + scientific data layer import OK", flush=True)
 
 print("APPCHK 08 — before set_page_config", flush=True)
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"
