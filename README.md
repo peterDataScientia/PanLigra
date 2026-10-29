@@ -2,6 +2,14 @@
 
 PanLigra is a PLIP-based protein–ligand interaction visualization workflow with a publication-oriented SVG editor. **PanLigra 6.0 modernizes the scientific-data and application architecture while preserving the approved molecule/residue publication style and extending the interaction layer to all eight PLIP classes.** The scientific molecular layer is locked; presentation annotations are editable without changing the underlying PLIP interaction measurements.
 
+## License
+
+Copyright (C) 2026 Anthony A. Peter and PanLigra contributors.
+
+PanLigra is distributed under the **GNU General Public License, version 2 only (GPL-2.0-only)**. The complete license text is in [LICENSE](LICENSE).
+
+PanLigra directly integrates the Protein–Ligand Interaction Profiler (PLIP 3.0.1), which is independently licensed under GPL-2.0-only. PLIP and other third-party software (including Streamlit, RDKit, Open Babel, Gemmi, and PyCairo) retain their own copyright and license terms; this license does not relicense any dependency or third-party asset. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency information. Review dependency license compatibility before distributing a bundled executable or container.
+
 ## Name and compatibility
 
 PanLigra is the public-facing name of the software formerly called PanViz Interactive. The PLIP scientific analysis, locked molecular rendering layer, saved `.panviz.json` layouts, internal APIs and existing `PanViz_*` project files remain supported. The rename does not change interaction detection, measurements, or scientific-record signatures.
