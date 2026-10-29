@@ -1,3 +1,10 @@
+# PanLigra public-brand transition
+
+- Adopted **PanLigra** as the public-facing name for the former PanViz Interactive software.
+- Updated the Streamlit header, editor copy, command-line labels and primary documentation without changing protein–ligand interaction detection or protected molecular-figure geometry.
+- Added `PanLigra.py` as the preferred CLI while retaining `PanViz.py`, `.panviz.json`, `PanViz_*` project file paths and internal identifiers for backward compatibility.
+- This is a branding update only; it is not a new scientific validation or a change to algorithmic results.
+
 # v6.0.0 — Architecture Upgrade + Eight-Class Interaction Rendering
 
 - Added Unicode-safe PDF export using embedded Liberation Sans so Greek symbols such as π remain correct and selectable; high-resolution raster fallback prevents corrupted glyphs if vector-font loading fails.

@@ -1,13 +1,17 @@
-# PanViz Interactive v6.0.0
+# PanLigra v6.0.0
 
-PanViz is a PLIP-based protein–ligand interaction visualization workflow with a publication-oriented SVG editor. **PanViz 6.0 modernizes the scientific-data and application architecture while preserving the approved molecule/residue publication style and extending the interaction layer to all eight PLIP classes.** The scientific molecular layer is locked; presentation annotations are editable without changing the underlying PLIP interaction measurements.
+PanLigra is a PLIP-based protein–ligand interaction visualization workflow with a publication-oriented SVG editor. **PanLigra 6.0 modernizes the scientific-data and application architecture while preserving the approved molecule/residue publication style and extending the interaction layer to all eight PLIP classes.** The scientific molecular layer is locked; presentation annotations are editable without changing the underlying PLIP interaction measurements.
+
+## Name and compatibility
+
+PanLigra is the public-facing name of the software formerly called PanViz Interactive. The PLIP scientific analysis, locked molecular rendering layer, saved `.panviz.json` layouts, internal APIs and existing `PanViz_*` project files remain supported. The rename does not change interaction detection, measurements, or scientific-record signatures.
 
 ## What is complete in v6.0.0
 
 ### Input
 - **PDB complex**: upload a complete protein–ligand `.pdb` complex **or search the RCSB Protein Data Bank directly** by keywords, protein name, ligand name/ID, or PDB accession. Browse entry titles, methods, resolution, and nonpolymer counts before importing.
-- The RCSB importer retrieves deposited coordinates (native PDB where available, otherwise mmCIF converted to a PLIP-compatible PDB using Gemmi). The original archive file and any converted PDB are preserved in the PanViz project bundle with PDB ID, source URL, retrieval time and format provenance.
-- PDB search filters are for discovery only. Presence of nonpolymer entities does **not** confirm an appropriate bound ligand: PanViz still requires PLIP to detect an eligible ligand/binding site. Older/complex entries with chain IDs that cannot be faithfully represented in legacy PDB require a curated PDB input.
+- The RCSB importer retrieves deposited coordinates (native PDB where available, otherwise mmCIF converted to a PLIP-compatible PDB using Gemmi). The original archive file and any converted PDB are preserved in the PanLigra project bundle with PDB ID, source URL, retrieval time and format provenance.
+- PDB search filters are for discovery only. Presence of nonpolymer entities does **not** confirm an appropriate bound ligand: PanLigra still requires PLIP to detect an eligible ligand/binding site. Older/complex entries with chain IDs that cannot be faithfully represented in legacy PDB require a curated PDB input.
 - **Docking PDBQT**: upload a receptor `.pdb` or `.pdbqt` plus a ligand/Vina `.pdbqt` file.
 - Multiple ligand `MODEL` poses are detected and selectable.
 - Vina `REMARK VINA RESULT` scores are shown when present.
@@ -74,7 +78,7 @@ These fields are not modified by presentation editing.
 - PDF export embeds Liberation Sans at runtime for selectable Unicode text, preserving Greek scientific symbols such as **π** in π-Stacking and π-Cation.
 - The font source is pinned to Git commit `ef7161f03e305982b0b247e9a0b7cc472376dd83` of `shantigilbert/liberation-fonts-ttf`.
 - Liberation Sans is used because it is metrically compatible with Arial and includes Greek glyphs.
-- If the Unicode font or vector conversion is unavailable, PanViz falls back to a high-resolution visual-fidelity PDF rather than exporting corrupted glyphs.
+- If the Unicode font or vector conversion is unavailable, PanLigra falls back to a high-resolution visual-fidelity PDF rather than exporting corrupted glyphs.
 
 ### Live interaction table and export
 - The interactive editor is the single figure surface; a duplicate static figure is not shown or offered separately for download.
@@ -121,18 +125,18 @@ PyMOL is not required for the web editor path.
 
 ## Command-line renderer
 
-The legacy/CLI renderer remains available through `PanViz.py`:
+The CLI renderer is available through `PanLigra.py`; the historical `PanViz.py` command is retained for compatibility:
 
 ```bash
-python PanViz.py -f complex.pdb -y --output_dir PanViz_results --no-pymol
+python PanLigra.py -f complex.pdb -y --output_dir PanViz_results --no-pymol
 ```
 
 ## Scientific-data policy
 
-PanViz is intentionally separated into a scientific data layer and a presentation layer. Styling operations change how a figure is drawn, not what PLIP measured. A saved layout therefore carries presentation state while the scientific interaction records remain immutable.
+PanLigra is intentionally separated into a scientific data layer and a presentation layer. Styling operations change how a figure is drawn, not what PLIP measured. A saved layout therefore carries presentation state while the scientific interaction records remain immutable.
 
 ### v5.8.7 professional object controls
-PanViz uses a two-layer model: the imported molecular structure is immutable, while independent presentation objects behave like figure-editor objects.
+PanLigra uses a two-layer model: the imported molecular structure is immutable, while independent presentation objects behave like figure-editor objects.
 
 **Original molecular layer**
 - Atoms, atom coordinates, covalent connectivity, and bond order cannot be moved, resized, rotated, restyled, deleted, or recreated.
@@ -182,6 +186,6 @@ Canvas width/height controls are intentionally disabled. Object-level editing ha
 
 ## Publication renderer contract
 
-PanViz treats the current molecule, residue, interaction, distance-label and legend appearance as a protected publication-quality renderer. Code may be refactored or renamed, and non-visual systems may evolve, but visual changes to this renderer are not permitted as incidental side effects.
+PanLigra treats the current molecule, residue, interaction, distance-label and legend appearance as a protected publication-quality renderer. Code may be refactored or renamed, and non-visual systems may evolve, but visual changes to this renderer are not permitted as incidental side effects.
 
 The approved visual baseline and regression policy are documented in `PUBLICATION_RENDERER_CONTRACT.md`. CI checks a golden geometry snapshot plus publication style invariants on every push and pull request.

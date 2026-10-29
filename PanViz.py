@@ -6,9 +6,9 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        prog="PanViz",
+        prog="PanLigra",
         description=(
-            "PanViz: PLIP-based protein-ligand interaction visualization. "
+            "PanLigra: PLIP-based protein-ligand interaction visualization. "
             "Generates publication-quality 2D interaction diagrams and, "
             "optionally, 3D PyMOL sessions from X-ray or simulated binding poses."
         ),
@@ -27,7 +27,7 @@ WORKFLOW
 
 OUTPUT STRUCTURE
 ----------------
-If --output_dir is supplied, PanViz writes each analyzed binding site as:
+If --output_dir is supplied, PanLigra writes each analyzed binding site as:
 
   OUTPUT_DIR/
   └── <binding_site_id>/
@@ -69,7 +69,7 @@ SB  = Salt bridge
 
 EXAMPLE
 -------
-PanViz -f complex.pdb -y -o ligand_interactions.png \
+PanLigra.py -f complex.pdb -y -o ligand_interactions.png \
        --output_dir PanViz_results --canvas_width 1400 --canvas_height 1000 \
        --no-pymol
 """
@@ -78,7 +78,7 @@ PanViz -f complex.pdb -y -o ligand_interactions.png \
     parser.add_argument(
         '--version',
         action='version',
-        version=f'PanViz {PANVIZ_VERSION}',
+        version=f'PanLigra {PANVIZ_VERSION}',
     )
 
     parser.add_argument(
@@ -86,7 +86,7 @@ PanViz -f complex.pdb -y -o ligand_interactions.png \
         type=str,
         required=True,
         metavar='FILE',
-        help='Input PDB complex for PLIP/PanViz analysis.'
+        help='Input PDB complex for PLIP/PanLigra analysis.'
     )
 
     pymol_group = parser.add_mutually_exclusive_group()
@@ -133,7 +133,7 @@ PanViz -f complex.pdb -y -o ligand_interactions.png \
         type=str,
         default=None,
         metavar='DIR',
-        help='Root directory for organized PanViz results. If omitted, use the original native output location.'
+        help='Root directory for organized PanLigra results. If omitted, use the original native output location.'
     )
 
     parser.add_argument(

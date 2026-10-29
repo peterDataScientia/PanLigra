@@ -38,7 +38,7 @@ print("APPCHK 07 — interactive_engine + v6 scientific data layer import OK", f
 print("APPCHK 08 — before set_page_config", flush=True)
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"
 LOGO_BASE64 = base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
-st.set_page_config(page_title=f"PanViz v{PANVIZ_VERSION}", page_icon=Image.open(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=f"PanLigra v{PANVIZ_VERSION}", page_icon=Image.open(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")
 print("APPCHK 09 — set_page_config OK", flush=True)
 print("APPCHK 10 — before main CSS markdown", flush=True)
 st.markdown("""
@@ -216,9 +216,9 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 </style>
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
-print("APPCHK 12 — before PanViz header markdown", flush=True)
-st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><img class="pv-brand-logo" src="data:image/png;base64,{LOGO_BASE64}" alt="PanViz logo"><div class="panviz-title"><span class="pv-wordmark">PanViz</span><span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
-print("APPCHK 13 — PanViz header markdown OK", flush=True)
+print("APPCHK 12 — before PanLigra header markdown", flush=True)
+st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><img class="pv-brand-logo" src="data:image/png;base64,{LOGO_BASE64}" alt="PanLigra logo"><div class="panviz-title"><span class="pv-wordmark">PanLigra</span><span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
+print("APPCHK 13 — PanLigra header markdown OK", flush=True)
 
 print("APPCHK 14 — before editor.html read", flush=True)
 EDITOR_HTML = (Path(__file__).with_name("editor.html")).read_text(encoding="utf-8")
@@ -333,7 +333,7 @@ def _safe_remove(path, attempts=20, delay=0.20):
 def _convert_with_obabel(input_path, output_path, input_format, selected_block=None):
     obabel = _find_obabel()
     if not obabel:
-        raise RuntimeError("Open Babel executable 'obabel' was not found. Install openbabel-wheel in the PanViz environment.")
+        raise RuntimeError("Open Babel executable 'obabel' was not found. Install openbabel-wheel in the PanLigra environment.")
     source = Path(input_path)
     cleanup = None
     if selected_block is not None:
@@ -773,10 +773,10 @@ if analyze:
                 target.write_bytes(data)
             project_readme = results_root/"PROJECT_README.md"
             project_readme.write_text(
-                f"# PanViz {PANVIZ_VERSION} project bundle\n\n"
+                f"# PanLigra {PANVIZ_VERSION} project bundle\n\n"
                 "This package contains the original structure input file(s), the PLIP-prepared complex, "
                 "canonical PLIP scientific records, the initial editable layout, "
-                "and a machine-readable manifest. Presentation styling in PanViz does not modify the underlying "
+                "and a machine-readable manifest. Presentation styling in PanLigra does not modify the underlying "
                 "PLIP scientific interaction records. Use the editor's **Save layout** and **Load layout** controls "
                 "to carry edited presentation state between sessions.\n",
                 encoding="utf-8"
@@ -787,7 +787,7 @@ if analyze:
             result["project_zip"]=str(zip_path)
             st.session_state.panviz_result=result
         except Exception as exc:
-            st.error(f"PanViz analysis failed: {exc}")
+            st.error(f"PanLigra analysis failed: {exc}")
             st.stop()
 
 result=st.session_state.get("panviz_result")

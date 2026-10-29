@@ -104,7 +104,7 @@ def test_editor_iframe_and_interaction_table_are_accessible():
 
 
 def test_panviz_wordmark_is_not_clipped_by_header_styles():
-    assert '<span class="pv-wordmark">PanViz</span>' in APP
+    assert '<span class="pv-wordmark">PanLigra</span>' in APP
     assert '<span class="pv-version">v{PANVIZ_VERSION}</span>' in APP
     assert ".panviz-title{display:flex;align-items:center;flex-wrap:wrap;" in APP
     assert "min-height:46px" in APP
@@ -122,7 +122,7 @@ def test_generated_panviz_logo_is_used_for_header_and_favicon():
     assert 'LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"' in APP
     assert 'page_icon=Image.open(LOGO_PATH)' in APP
     assert 'src="data:image/png;base64,{LOGO_BASE64}"' in APP
-    assert 'alt="PanViz logo"' in APP
+    assert 'alt="PanLigra logo"' in APP
     assert 'class="pv-brand-logo"' in APP
     assert 'page_icon="🧬"' not in APP
 

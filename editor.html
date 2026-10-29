@@ -152,7 +152,7 @@
 @media(max-width:760px){#pv-toolbar{padding:8px;gap:6px}#pv-toolbar .pv-tool-menu summary{padding:7px 9px}#pv-toolbar .pv-menu-panel{min-width:170px}#pv-stage{padding:6px}#pv-status{margin-left:0}}
 </style>
 
-<div id="pv-toolbar" role="toolbar" aria-label="PanViz figure editor">
+<div id="pv-toolbar" role="toolbar" aria-label="PanLigra figure editor">
   <div class="group" aria-label="Selection"><button id="pv-move" class="active">Move</button><button id="pv-select">Select</button></div>
   <div class="group" aria-label="Edit history"><button id="pv-undo">Undo</button><button id="pv-redo">Redo</button><button id="pv-reset">Reset</button></div>
   <details class="pv-tool-menu"><summary>＋ Insert</summary><div class="pv-menu-panel">
@@ -946,7 +946,7 @@ async function registerPdfUnicodeFonts(pdf){
     }));
     return loaded.every(Boolean);
   }catch(err){
-    console.warn('PanViz Unicode PDF font unavailable; using raster PDF fallback.',err);
+    console.warn('PanLigra Unicode PDF font unavailable; using raster PDF fallback.',err);
     return false;
   }
 }
@@ -982,7 +982,7 @@ async function writeRasterPdfFallback(pdf,svgNode,xg,pdfW,pdfH){
 }
 async function exportPDF(){
   const xg=scaledExportGeometry();
-  const filename=((state.site||'PanViz').replaceAll(':','_')+`_edited_${xg.scale}x.pdf`).replace(/[<>"']/g,'_');
+  const filename=((state.site||'PanLigra').replaceAll(':','_')+`_edited_${xg.scale}x.pdf`).replace(/[<>"']/g,'_');
 
   // Match the PNG export dimensions exactly at the selected export scale.
   // The PDF stays vector, but its page is sized from the same pixel geometry
@@ -992,7 +992,7 @@ async function exportPDF(){
   const pdfH=xg.height*pxToPt;
 
   if(!window.jspdf||!window.jspdf.jsPDF){
-    alert('PDF library did not load. Please refresh the PanViz page and try again.');
+    alert('PDF library did not load. Please refresh the PanLigra page and try again.');
     return;
   }
 
@@ -1001,7 +1001,7 @@ async function exportPDF(){
     typeof window.jspdf.jsPDF.API.svg === 'function';
 
   if(!svg2pdfReady){
-    alert('SVG-to-PDF library did not load. Please refresh the PanViz page and try again.');
+    alert('SVG-to-PDF library did not load. Please refresh the PanLigra page and try again.');
     return;
   }
 
@@ -1020,7 +1020,7 @@ async function exportPDF(){
   const svgNode=holder.querySelector('svg');
   if(!svgNode){
     holder.remove();
-    alert('PanViz could not prepare the SVG for PDF export.');
+    alert('PanLigra could not prepare the SVG for PDF export.');
     return;
   }
 
@@ -1076,7 +1076,7 @@ async function exportPDF(){
         `PDF downloaded at ${xg.width}×${xg.height} using visual-fidelity fallback.`;
     }
   }catch(err){
-    console.error('PanViz PDF export failed',err);
+    console.error('PanLigra PDF export failed',err);
     alert('PDF export failed: '+(err&&err.message?err.message:String(err)));
     status.textContent='PDF export failed.';
   }finally{
@@ -1086,7 +1086,7 @@ async function exportPDF(){
 
 function addNote(){pushUndo();const id='note_'+Date.now();const o={id,text:'Text',x:state.width/2,y:state.height/2,w:90,h:24,fontSize:Number(state.style.note?.fontSize||18),fontFamily:state.style.note?.fontFamily||'Arial',fontWeight:Number(state.style.note?.fontWeight||400),textColor:state.style.note?.textColor||'#111111',backgroundColor:state.style.note?.backgroundColor||'#ffffff',backgroundOpacity:Number(state.style.note?.backgroundOpacity??0.92),backgroundEnabled:true,italic:false,underline:false,rotation:0,visible:true};measure(o,o.text);o._originX=o.x;o._originY=o.y;state.notes.push(o);setSelectedRef('note',id,false);renderAnnotations();renderSelection();showRibbon();openTextEditor();}
 function addArrow(){pushUndo();const id='arrow_'+Date.now(),o={id,x1:state.width*.35,y1:state.height*.35,x2:state.width*.65,y2:state.height*.55,color:state.style.arrow?.color||'#111111',width:Number(state.style.arrow?.width||2.5),dash:state.style.arrow?.dash||'',headSize:Number(state.style.arrow?.headSize||10),rotation:0,visible:true};state.arrows.push(o);setSelectedRef('arrow',id,false);renderAnnotations();renderSelection();showRibbon();}
-function validateLoadedLayout(candidate){if(!candidate||typeof candidate!=='object')throw new Error('The selected file is not a PanViz layout JSON object.');for(const k of ['atoms','bonds','labels','interactions','distances'])if(!Array.isArray(candidate[k]))throw new Error(`Missing required field: ${k}`);if(String(candidate.site||'')!==String(state.site||''))throw new Error('This layout belongs to a different binding site. Load it into the matching PanViz figure.');if(candidate.atoms.length!==state.atoms.length||candidate.bonds.length!==state.bonds.length||candidate.interactions.length!==state.interactions.length)throw new Error('The layout topology/interaction fingerprint does not match the current figure. Layout loading was cancelled.');const a=currentAtomSignature(candidate.atoms),b=currentAtomSignature(state.atoms);if(a!==b)throw new Error('The uploaded layout does not match the current ligand atom set.');}
+function validateLoadedLayout(candidate){if(!candidate||typeof candidate!=='object')throw new Error('The selected file is not a PanLigra layout JSON object.');for(const k of ['atoms','bonds','labels','interactions','distances'])if(!Array.isArray(candidate[k]))throw new Error(`Missing required field: ${k}`);if(String(candidate.site||'')!==String(state.site||''))throw new Error('This layout belongs to a different binding site. Load it into the matching PanViz figure.');if(candidate.atoms.length!==state.atoms.length||candidate.bonds.length!==state.bonds.length||candidate.interactions.length!==state.interactions.length)throw new Error('The layout topology/interaction fingerprint does not match the current figure. Layout loading was cancelled.');const a=currentAtomSignature(candidate.atoms),b=currentAtomSignature(state.atoms);if(a!==b)throw new Error('The uploaded layout does not match the current ligand atom set.');}
 function currentAtomSignature(atoms){return (atoms||[]).map(a=>`${a.name}|${a.element}`).join('\n');}
 function loadLayoutObject(candidate){validateLoadedLayout(candidate);pushUndo();const preserved={atoms:state.atoms,bonds:state.bonds,site:state.site,scientificData:state.scientificData,moleculeStyle:clone(state.style?.molecule||{}),bondWidth:state.style?.bondWidth,moleculeLabelSize:state.style?.moleculeLabelSize};state=migrate(clone(candidate));state.atoms=preserved.atoms;state.bonds=preserved.bonds;state.site=preserved.site;state.scientificData=preserved.scientificData;state.bondEdits=Array.isArray(state.bondEdits)?state.bondEdits.filter(o=>o&&o.custom===true&&o.sourceBondId==null&&o.a==null&&o.b==null):[];state.style.molecule=preserved.moleculeStyle; if(preserved.bondWidth!=null)state.style.bondWidth=preserved.bondWidth; if(preserved.moleculeLabelSize!=null)state.style.moleculeLabelSize=preserved.moleculeLabelSize;savedInitial=clone(state);past=[];future=[];selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';syncStylePanel();syncCanvasUI();molecule();moleculeCopyLayer();renderAnnotations();renderSelection();}
 measureLegend(state.legend);cw.value=state.width;ch.value=state.height;syncCanvasUI();molecule();layers.annotations=el('g',{id:'pv-annotations'});svg.appendChild(layers.annotations);moleculeCopyLayer();renderAnnotations();renderSelection();
@@ -1099,7 +1099,7 @@ document.getElementById('pv-reset').onclick=reset;
 document.getElementById('pv-clear-selection').onclick=clearSelection;document.getElementById('pv-edit-apply').onclick=applyText;
 document.getElementById('pv-add-bond').onclick=addBond;document.getElementById('pv-add-interaction').onclick=addInteraction;document.getElementById('pv-add-distance').onclick=addDistance;document.getElementById('pv-add-text').onclick=addNote;document.getElementById('pv-add-arrow').onclick=addArrow;
 document.getElementById('pv-load-json').onclick=()=>document.getElementById('pv-layout-file').click();
-document.getElementById('pv-layout-file').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{loadLayoutObject(JSON.parse(r.result));status.textContent='Layout loaded';}catch(err){alert('PanViz layout load failed: '+err.message);}e.target.value='';};r.readAsText(f);});
+document.getElementById('pv-layout-file').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{loadLayoutObject(JSON.parse(r.result));status.textContent='Layout loaded';}catch(err){alert('PanLigra layout load failed: '+err.message);}e.target.value='';};r.readAsText(f);});
 cw.addEventListener('change',resizeCanvas);ch.addEventListener('change',resizeCanvas);
 interactionWidth.addEventListener('pointerdown',()=>{if(!styleUndoArmed){pushUndo();styleUndoArmed=true;}});interactionWidth.addEventListener('focus',()=>{if(!styleUndoArmed){pushUndo();styleUndoArmed=true;}});interactionWidth.addEventListener('input',changeInteractionWidth);interactionWidth.addEventListener('change',()=>{styleUndoArmed=false;});
 const stylePanel=document.getElementById('pv-style-panel');
@@ -1121,9 +1121,9 @@ document.getElementById('pv-apply-int-type').onclick=()=>{pushUndo();const k=doc
 document.getElementById('pv-int-use-global').onclick=()=>{pushUndo();const k=document.getElementById('pv-int-type').value;state.style.interactions[k].custom=false;syncStylePanel();renderAnnotations();renderSelection();};
 
 
-document.getElementById('pv-json').onclick=()=>download((state.site||'PanViz').replaceAll(':','_')+'_layout.panviz.json','application/json',JSON.stringify(stripPrivate(clone(state)),null,2));
-document.getElementById('pv-svg').onclick=()=>download((state.site||'PanViz').replaceAll(':','_')+'_edited.svg','image/svg+xml;charset=utf-8',sceneSvg());
-document.getElementById('pv-png').onclick=()=>{const xg=scaledExportGeometry(),txt=sceneSvg(),blob=new Blob([txt],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob),img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=xg.width;c.height=xg.height;const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);c.toBlob(b=>download((state.site||'PanViz').replaceAll(':','_')+'_edited_'+xg.scale+'x.png','image/png',b),'image/png');};img.src=url;};
+document.getElementById('pv-json').onclick=()=>download((state.site||'PanLigra').replaceAll(':','_')+'_layout.panviz.json','application/json',JSON.stringify(stripPrivate(clone(state)),null,2));
+document.getElementById('pv-svg').onclick=()=>download((state.site||'PanLigra').replaceAll(':','_')+'_edited.svg','image/svg+xml;charset=utf-8',sceneSvg());
+document.getElementById('pv-png').onclick=()=>{const xg=scaledExportGeometry(),txt=sceneSvg(),blob=new Blob([txt],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob),img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=xg.width;c.height=xg.height;const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);c.toBlob(b=>download((state.site||'PanLigra').replaceAll(':','_')+'_edited_'+xg.scale+'x.png','image/png',b),'image/png');};img.src=url;};
 document.getElementById('pv-pdf').onclick=exportPDF;
 svg.addEventListener('pointerdown',e=>{if(e.target===svg){clearSelection();}});
 svg.addEventListener('pointermove',onCanvasPointerMove,{passive:false});
