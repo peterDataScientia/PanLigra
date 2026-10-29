@@ -31,29 +31,29 @@ from utils import plip_2d_interactions
 print("APPCHK 06 — utils import OK", flush=True)
 from interactive_engine import build_editor_scene
 from scientific_records import build_scientific_records, build_figure_records, write_scientific_exports
-from panviz_version import PANVIZ_VERSION, PANVIZ_RENDERER_REVISION
+from panligra_version import PANLIGRA_VERSION, PANLIGRA_RENDERER_REVISION
 import rcsb_pdb
 print("APPCHK 07 — interactive_engine + scientific data layer import OK", flush=True)
 
 print("APPCHK 08 — before set_page_config", flush=True)
-LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"
+LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panligra_logo_icon.png"
 LOGO_BASE64 = base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
-st.set_page_config(page_title=f"PanLigra v{PANVIZ_VERSION}", page_icon=Image.open(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=f"PanLigra v{PANLIGRA_VERSION}", page_icon=Image.open(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")
 print("APPCHK 09 — set_page_config OK", flush=True)
 print("APPCHK 10 — before main CSS markdown", flush=True)
 st.markdown("""
 <style>
 :root{--pv-navy:#143761;--pv-blue:#1f5aa6;--pv-ink:#16243a;--pv-muted:#65748b;--pv-line:#dce4ef}
 .block-container{padding-top:1rem;padding-bottom:1.5rem;max-width:1800px}
-.panviz-shell{border:1px solid #dbe3ee;border-radius:18px;padding:18px 20px 16px;background:linear-gradient(135deg,#f7faff 0%,#ffffff 52%,#f4f7fb 100%);box-shadow:0 8px 28px rgba(24,54,90,.07);margin-bottom:16px}
-.panviz-brand{display:flex;align-items:center;gap:12px}
-.panviz-mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:white;font-size:22px;font-weight:800;background:linear-gradient(135deg,#1d5da9,#143761);box-shadow:0 5px 14px rgba(20,55,97,.24)}
-.panviz-title{font-size:2.0rem;font-weight:800;letter-spacing:-.6px;color:var(--pv-ink);line-height:1.05}
-.panviz-subtitle{color:var(--pv-muted);font-size:.94rem;margin-top:3px}
-.panviz-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
-.panviz-badge{font-size:.72rem;font-weight:700;color:#34506f;background:#eef4fb;border:1px solid #dce7f3;border-radius:999px;padding:5px 9px}
-.panviz-section{border:1px solid var(--pv-line);border-radius:14px;padding:12px 14px;background:#fff;box-shadow:0 4px 14px rgba(31,55,88,.05);margin:10px 0}
-.panviz-section h4{margin:0 0 8px;color:var(--pv-navy);font-size:13px}
+.panligra-shell{border:1px solid #dbe3ee;border-radius:18px;padding:18px 20px 16px;background:linear-gradient(135deg,#f7faff 0%,#ffffff 52%,#f4f7fb 100%);box-shadow:0 8px 28px rgba(24,54,90,.07);margin-bottom:16px}
+.panligra-brand{display:flex;align-items:center;gap:12px}
+.panligra-mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:white;font-size:22px;font-weight:800;background:linear-gradient(135deg,#1d5da9,#143761);box-shadow:0 5px 14px rgba(20,55,97,.24)}
+.panligra-title{font-size:2.0rem;font-weight:800;letter-spacing:-.6px;color:var(--pv-ink);line-height:1.05}
+.panligra-subtitle{color:var(--pv-muted);font-size:.94rem;margin-top:3px}
+.panligra-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.panligra-badge{font-size:.72rem;font-weight:700;color:#34506f;background:#eef4fb;border:1px solid #dce7f3;border-radius:999px;padding:5px 9px}
+.panligra-section{border:1px solid var(--pv-line);border-radius:14px;padding:12px 14px;background:#fff;box-shadow:0 4px 14px rgba(31,55,88,.05);margin:10px 0}
+.panligra-section h4{margin:0 0 8px;color:var(--pv-navy);font-size:13px}
 div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;background:#fbfdff;padding:4px}
 .pdbqt-step{font-size:11px;font-weight:800;letter-spacing:.08em;color:#6d7d92;margin-bottom:4px}
 .pdbqt-card-title{font-size:14px;font-weight:800;color:#143761;letter-spacing:.02em}
@@ -62,9 +62,9 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 .pdbqt-example code{font-size:10.5px;background:#eef3f8;padding:2px 4px;border-radius:4px}
 .stButton>button{border-radius:9px;font-weight:700}
 .stDownloadButton>button{border-radius:9px}
-.panviz-foot{color:#7a8798;font-size:.73rem;margin-top:10px}
+.panligra-foot{color:#7a8798;font-size:.73rem;margin-top:10px}
 
-/* PanViz reading hierarchy: legible text, deliberate weights and AA-safe ink.
+/* PanLigra reading hierarchy: legible text, deliberate weights and AA-safe ink.
    Only the Streamlit application chrome is styled here; the PLIP figure, its
    immutable molecule and scientific renderer are never targeted. */
 :root{
@@ -181,43 +181,43 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
   font-size:13px;
   font-weight:500;
 }
-.panviz-title{font-size:2rem;font-weight:800;line-height:1.15;color:#172c44}
-.panviz-subtitle{font-size:.97rem;font-weight:550;color:#3b5069;line-height:1.5}
-.panviz-badge{font-size:.76rem;font-weight:700;color:#294664}
-.panviz-section h4{font-size:15px;font-weight:800;line-height:1.4;color:#193956}
+.panligra-title{font-size:2rem;font-weight:800;line-height:1.15;color:#172c44}
+.panligra-subtitle{font-size:.97rem;font-weight:550;color:#3b5069;line-height:1.5}
+.panligra-badge{font-size:.76rem;font-weight:700;color:#294664}
+.panligra-section h4{font-size:15px;font-weight:800;line-height:1.4;color:#193956}
 .pdbqt-step{font-size:12px;font-weight:800;color:#38536d}
 .pdbqt-card-title{font-size:15px;font-weight:800;color:#193956}
 .pdbqt-card-desc{font-size:13px;font-weight:550;color:#40536b;line-height:1.55}
 .pdbqt-example{font-size:12px;font-weight:550;color:#40536b;line-height:1.55}
 .pdbqt-example code{font-size:11.5px;font-weight:600;color:#173b63}
-.panviz-foot{font-size:12px;font-weight:550;color:#40536b}
+.panligra-foot{font-size:12px;font-weight:550;color:#40536b}
 @media(max-width:760px){
-  .panviz-title{font-size:1.7rem}
+  .panligra-title{font-size:1.7rem}
   [data-testid="stAppViewContainer"] .block-container{font-size:14px}
 }
 
-/* PanViz UX workbench: structure setup in the sidebar, figure in the main pane. */
-.panviz-shell{padding:12px 16px!important;background:#fff!important;border-radius:13px!important;box-shadow:none!important;margin-bottom:10px!important;overflow:visible!important}
-.panviz-mark{width:38px!important;height:38px!important;background:#173d68!important;box-shadow:none!important;font-size:27px!important}
-.panviz-brand{display:flex;align-items:center;gap:8px;min-height:46px;overflow:visible}
+/* PanLigra UX workbench: structure setup in the sidebar, figure in the main pane. */
+.panligra-shell{padding:12px 16px!important;background:#fff!important;border-radius:13px!important;box-shadow:none!important;margin-bottom:10px!important;overflow:visible!important}
+.panligra-mark{width:38px!important;height:38px!important;background:#173d68!important;box-shadow:none!important;font-size:27px!important}
+.panligra-brand{display:flex;align-items:center;gap:8px;min-height:46px;overflow:visible}
 .pv-brand-logo{display:block;width:36px;height:36px;object-fit:contain;flex:0 0 36px}
-.panviz-title{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;row-gap:0;min-height:46px;box-sizing:border-box;overflow:visible!important;font-size:1.65rem!important;letter-spacing:-.025em!important;line-height:1.5!important}
+.panligra-title{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;row-gap:0;min-height:46px;box-sizing:border-box;overflow:visible!important;font-size:1.65rem!important;letter-spacing:-.025em!important;line-height:1.5!important}
 .pv-wordmark{display:inline-block;line-height:1.5;padding:1px 0;white-space:nowrap}
 .pv-version{display:inline-block;font-size:12px;font-weight:700;color:#5e7692;letter-spacing:0;line-height:1.5;vertical-align:baseline;white-space:nowrap;align-self:center}
-.panviz-subtitle{font-size:13px!important;margin-top:1px!important}
+.panligra-subtitle{font-size:13px!important;margin-top:1px!important}
 .pv-header-note{margin-left:auto;align-self:center;color:#476079;font-size:12px;font-weight:650}
 .pv-workspace-intro{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding:8px 1px 12px;color:#41566e;font-size:13px;font-weight:500}
 .pv-kicker{font-size:11px;letter-spacing:.08em;color:#1a4d81;font-weight:800}
 [data-testid="stSidebar"] .block-container{padding-top:1rem;padding-bottom:2rem}
 [data-testid="stSidebar"] h3{font-size:17px;font-weight:750;color:#1d3550}
 [data-testid="stSidebar"] [data-testid="stFileUploader"]{background:#fff;border-radius:10px}
-@media(max-width:900px){.panviz-title{font-size:1.4rem!important;line-height:1.5!important;min-height:42px}}
+@media(max-width:900px){.panligra-title{font-size:1.4rem!important;line-height:1.5!important;min-height:42px}}
 
 </style>
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
 print("APPCHK 12 — before PanLigra header markdown", flush=True)
-st.markdown(f"""<div class="panviz-shell"><div class="panviz-brand"><img class="pv-brand-logo" src="data:image/png;base64,{LOGO_BASE64}" alt="PanLigra logo"><div class="panviz-title"><span class="pv-wordmark">PanLigra</span><span class="pv-version">v{PANVIZ_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
+st.markdown(f"""<div class="panligra-shell"><div class="panligra-brand"><img class="pv-brand-logo" src="data:image/png;base64,{LOGO_BASE64}" alt="PanLigra logo"><div class="panligra-title"><span class="pv-wordmark">PanLigra</span><span class="pv-version">v{PANLIGRA_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
 print("APPCHK 13 — PanLigra header markdown OK", flush=True)
 
 print("APPCHK 14 — before editor.html read", flush=True)
@@ -225,7 +225,7 @@ EDITOR_HTML = (Path(__file__).with_name("editor.html")).read_text(encoding="utf-
 print(f"APPCHK 15 — editor.html read OK ({len(EDITOR_HTML)} chars)", flush=True)
 
 def render_editor(scene):
-    html = EDITOR_HTML.replace("__PANVIZ_SCENE__", json.dumps(scene, ensure_ascii=False))
+    html = EDITOR_HTML.replace("__PANLIGRA_SCENE__", json.dumps(scene, ensure_ascii=False))
 
     # Let the embedded editor report its real rendered height to Streamlit.
     # This prevents a large fixed iframe from leaving blank space below the
@@ -249,7 +249,7 @@ def render_editor(scene):
         }, '*');
       };
 
-      window.panvizResizeHost = reportHeight;
+      window.panligraResizeHost = reportHeight;
       window.addEventListener('load', () => {
         reportHeight();
         setTimeout(reportHeight, 80);
@@ -340,7 +340,7 @@ def _convert_with_obabel(input_path, output_path, input_format, selected_block=N
         # Create, close, and then write the selected pose so no Python handle
         # remains open while Open Babel reads the file on Windows.
         temp = tempfile.NamedTemporaryFile(
-            mode="w", prefix="panviz_pose_", suffix="." + input_format,
+            mode="w", prefix="panligra_pose_", suffix="." + input_format,
             encoding="utf-8", newline="", delete=False
         )
         try:
@@ -439,7 +439,7 @@ def _build_pdbqt_complex(receptor_path, ligand_path, work_root, pose_index=0):
         start_serial=ligand_start,
     )
 
-    combined = work_root / "panviz_pdbqt_complex.pdb"
+    combined = work_root / "panligra_pdbqt_complex.pdb"
     receptor_lines=[x for x in receptor_pdb.read_text(encoding="utf-8", errors="replace").splitlines() if x[:6].strip() in {"ATOM", "HETATM", "TER"}]
     ligand_lines=[x for x in ligand_pdb.read_text(encoding="utf-8", errors="replace").splitlines() if x[:6].strip() in {"ATOM", "HETATM", "TER"}]
     combined.write_text("\n".join(receptor_lines + ["TER"] + ligand_lines + ["END"]) + "\n", encoding="utf-8")
@@ -479,7 +479,7 @@ def _zip_tree(source_root, output_zip):
 
 def _write_project_manifest(result, manifest_path):
     manifest = {
-        "panviz_version": PANVIZ_VERSION,
+        "panligra_version": PANLIGRA_VERSION,
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "input_mode": result["input_mode"],
         "source_files": result["source_files"],
@@ -499,7 +499,7 @@ def _write_project_manifest(result, manifest_path):
         "publication_renderer_baseline": "3c6a3390f65c5f30ccb367b52cf916cd5683d0e6",
         "legacy_five_class_renderer_baseline": "237db30af8639379ed3976657f9bbcce28110725",
         "renderer_scene_schema_version": result.get("scene", {}).get("version"),
-        "renderer_revision": PANVIZ_RENDERER_REVISION,
+        "renderer_revision": PANLIGRA_RENDERER_REVISION,
         "scientific_data_policy": "PLIP interaction measurements are normalized independently of presentation styling; the approved publication renderer remains unchanged.",
     }
     Path(manifest_path).write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -513,9 +513,9 @@ with st.sidebar:
     input_mode=st.radio("Input mode",["PDB complex","Docking PDBQT"],horizontal=True)
     print(f"APPCHK 19 — input_mode radio OK ({input_mode})", flush=True)
     print("APPCHK 20 — before session workspace", flush=True)
-    if "panviz_work_root" not in st.session_state or not Path(st.session_state.panviz_work_root).exists():
-        st.session_state.panviz_work_root=tempfile.mkdtemp(prefix="panviz_")
-    work_root=Path(st.session_state.panviz_work_root)
+    if "panligra_work_root" not in st.session_state or not Path(st.session_state.panligra_work_root).exists():
+        st.session_state.panligra_work_root=tempfile.mkdtemp(prefix="panligra_")
+    work_root=Path(st.session_state.panligra_work_root)
     print(f"APPCHK 21 — session workspace OK ({work_root})", flush=True)
     source_files=[]
     source_payloads=[]
@@ -528,7 +528,7 @@ with st.sidebar:
             "Structure source",
             ["Upload PDB", "Search RCSB PDB"],
             horizontal=True,
-            key="panviz_pdb_source",
+            key="panligra_pdb_source",
         )
         if structure_source == "Upload PDB":
             uploaded=st.file_uploader(
@@ -545,16 +545,16 @@ with st.sidebar:
             source_files=[filename]
             source_payloads=[(filename,file_bytes)]
         else:
-            with st.form("panviz_rcsb_search_form"):
+            with st.form("panligra_rcsb_search_form"):
                 mode = st.selectbox(
                     "Search by",
                     ["Keywords", "PDB ID", "Protein name", "Ligand name / ID"],
-                    key="panviz_rcsb_mode",
+                    key="panligra_rcsb_mode",
                 )
                 search_term = st.text_input(
                     "Search PDB database",
                     placeholder="e.g. plasmepsin II, 1LF2, R37",
-                    key="panviz_rcsb_query",
+                    key="panligra_rcsb_query",
                 )
                 with st.expander("Optional search filters"):
                     organism = st.text_input(
@@ -574,14 +574,14 @@ with st.sidebar:
                         )
                         found = rcsb_pdb.search(**options)
                         rows = rcsb_pdb.summaries(found["ids"])
-                    st.session_state.panviz_rcsb_search = dict(
+                    st.session_state.panligra_rcsb_search = dict(
                         options=options, result=found, rows=rows, start=0
                     )
-                    st.session_state.pop("panviz_rcsb_loaded", None)
+                    st.session_state.pop("panligra_rcsb_loaded", None)
                 except rcsb_pdb.PDBDatabaseError as exc:
                     st.error(str(exc))
-                    st.session_state.pop("panviz_rcsb_search", None)
-            search_state = st.session_state.get("panviz_rcsb_search")
+                    st.session_state.pop("panligra_rcsb_search", None)
+            search_state = st.session_state.get("panligra_rcsb_search")
             if not search_state:
                 st.stop()
             matches=search_state["result"]
@@ -604,7 +604,7 @@ with st.sidebar:
                             **search_state["options"], start=next_start
                         )
                         rows=rcsb_pdb.summaries(found["ids"])
-                    st.session_state.panviz_rcsb_search=dict(
+                    st.session_state.panligra_rcsb_search=dict(
                         options=search_state["options"],result=found,
                         rows=rows,start=next_start,
                     )
@@ -616,7 +616,7 @@ with st.sidebar:
                 "Select PDB structure",
                 matches["ids"],
                 format_func=lambda x: f"{x} · {title_by_id.get(x, '')[:58]}",
-                key="panviz_rcsb_selected_id",
+                key="panligra_rcsb_selected_id",
             )
             metadata=next(
                 (row for row in search_state["rows"] if row["PDB ID"]==pdb_id), {}
@@ -626,12 +626,12 @@ with st.sidebar:
                 try:
                     with st.spinner(f"Downloading {pdb_id} from RCSB PDB…"):
                         data=rcsb_pdb.download(pdb_id)
-                    st.session_state.panviz_rcsb_loaded=data
-                    st.session_state.pop("panviz_result", None)
+                    st.session_state.panligra_rcsb_loaded=data
+                    st.session_state.pop("panligra_result", None)
                     st.rerun()
                 except rcsb_pdb.PDBDatabaseError as exc:
                     st.error(str(exc))
-            loaded=st.session_state.get("panviz_rcsb_loaded")
+            loaded=st.session_state.get("panligra_rcsb_loaded")
             if not loaded or loaded.get("pdb_id")!=pdb_id:
                 st.stop()
             pdb_path=work_root/loaded["pdb_filename"]
@@ -700,8 +700,8 @@ with st.sidebar:
 
 
 result_key_payload = {
-    "panviz_version": PANVIZ_VERSION,
-    "renderer_revision": PANVIZ_RENDERER_REVISION,
+    "panligra_version": PANLIGRA_VERSION,
+    "renderer_revision": PANLIGRA_RENDERER_REVISION,
     "mode": input_mode,
     "source_hashes": [_sha256_bytes(x[1]) for x in source_payloads],
     "pose": pose_index,
@@ -712,7 +712,7 @@ result_key_payload = {
 result_key=_sha256_bytes(json.dumps(result_key_payload,sort_keys=True).encode())
 
 if analyze:
-    results_root=work_root/"PanViz_results";results_root.mkdir(parents=True,exist_ok=True)
+    results_root=work_root/"PanLigra_results";results_root.mkdir(parents=True,exist_ok=True)
     with st.spinner(" "):
         try:
             analysis_obj=plip_2d_interactions(
@@ -741,7 +741,7 @@ if analyze:
                 analysis=analysis_obj,
             )
             figure_df=build_figure_records(scene)
-            (site_dir/"PanViz_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
+            (site_dir/"PanLigra_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
             result={
                 "key": result_key,
                 "input_mode": input_mode,
@@ -773,7 +773,7 @@ if analyze:
                 target.write_bytes(data)
             project_readme = results_root/"PROJECT_README.md"
             project_readme.write_text(
-                f"# PanLigra {PANVIZ_VERSION} project bundle\n\n"
+                f"# PanLigra {PANLIGRA_VERSION} project bundle\n\n"
                 "This package contains the original structure input file(s), the PLIP-prepared complex, "
                 "canonical PLIP scientific records, the initial editable layout, "
                 "and a machine-readable manifest. Presentation styling in PanLigra does not modify the underlying "
@@ -781,16 +781,16 @@ if analyze:
                 "to carry edited presentation state between sessions.\n",
                 encoding="utf-8"
             )
-            _write_project_manifest(result, site_dir/"PanViz_manifest.json")
-            zip_path=results_root/f"{source_stem}_PanViz_project.zip"
+            _write_project_manifest(result, site_dir/"PanLigra_manifest.json")
+            zip_path=results_root/f"{source_stem}_PanLigra_project.zip"
             _zip_tree(results_root,zip_path)
             result["project_zip"]=str(zip_path)
-            st.session_state.panviz_result=result
+            st.session_state.panligra_result=result
         except Exception as exc:
             st.error(f"PanLigra analysis failed: {exc}")
             st.stop()
 
-result=st.session_state.get("panviz_result")
+result=st.session_state.get("panligra_result")
 if not result or result.get("key")!=result_key:
     st.stop()
 

@@ -1,6 +1,6 @@
-"""PanViz visualization and PLIP interaction-processing utilities.
+"""PanLigra visualization and PLIP interaction-processing utilities.
 
-PanViz uses PLIP for interaction detection and provides the customized
+PanLigra uses PLIP for interaction detection and provides the customized
 2D renderer plus optional PyMOL session generation. The visualization
 logic is retained from the supplied original PLIPViz utility.
 """
@@ -351,7 +351,7 @@ def _draw_mol(atom_info, connections, padding, canvas_height, canvas_width, out_
     atom_font_size = max(14, min(19, int(base * 0.019)))
     distance_font_size = max(14, min(18, int(base * 0.018)))
 
-    # Global PanViz defaults shared by the original renderer and editor.
+    # Global PanLigra defaults shared by the original renderer and editor.
     # Covalent chemistry is rendered at 2.0 px; non-covalent interactions at 3.0 px.
     single_width = 2.0
     double_width = 2.0
@@ -979,9 +979,9 @@ hbkeys = [
 ]
 
 def plip_2d_interactions(file, bsid, padding=35, canvas_height=700, canvas_width=1000,
-                         save_files=True, save_pymol=True, out_name="PanViz_interactions.png",
+                         save_files=True, save_pymol=True, out_name="PanLigra_interactions.png",
                          output_dir=None, analysis=None):
-    """Run PLIP analysis for one binding site and render a PanViz interaction diagram.
+    """Run PLIP analysis for one binding site and render a PanLigra interaction diagram.
 
     Parameters
     ----------
@@ -990,10 +990,10 @@ def plip_2d_interactions(file, bsid, padding=35, canvas_height=700, canvas_width
     bsid : str
         PLIP binding-site identifier, e.g. ``LIG:X:999``.
     output_dir : str or None
-        Root directory for organized PanViz outputs. If None, preserve the original
+        Root directory for organized PanLigra outputs. If None, preserve the original
         native output location beside the input PDB.
     analysis : dict or None
-        Optional previously completed PanViz/PLIP analysis. When supplied, PLIP
+        Optional previously completed PanLigra/PLIP analysis. When supplied, PLIP
         is not re-run; the existing normalized structure and interaction tables are
         reused for an additional figure render (for example, PNG and SVG parity).
     """

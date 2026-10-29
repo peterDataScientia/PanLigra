@@ -1,6 +1,6 @@
 from utils import plip_2d_interactions
 from plip.structure.preparation import PDBComplex
-from panviz_version import PANVIZ_VERSION
+from panligra_version import PANLIGRA_VERSION
 import argparse
 
 
@@ -48,7 +48,7 @@ If --output_dir is supplied, PanLigra writes each analyzed binding site as:
 Only interaction CSV files for interaction types actually detected by PLIP
 are written. The output filename controls the 2D figure name.
 
-If --output_dir is omitted, PanViz preserves the original PLIPViz behavior
+If --output_dir is omitted, PanLigra preserves the original PLIPViz behavior
 and creates <input_stem>_output beside the input PDB.
 
 CUSTOMIZATION
@@ -70,7 +70,7 @@ SB  = Salt bridge
 EXAMPLE
 -------
 PanLigra.py -f complex.pdb -y -o ligand_interactions.png \
-       --output_dir PanViz_results --canvas_width 1400 --canvas_height 1000 \
+       --output_dir PanLigra_results --canvas_width 1400 --canvas_height 1000 \
        --no-pymol
 """
     )
@@ -78,7 +78,7 @@ PanLigra.py -f complex.pdb -y -o ligand_interactions.png \
     parser.add_argument(
         '--version',
         action='version',
-        version=f'PanLigra {PANVIZ_VERSION}',
+        version=f'PanLigra {PANLIGRA_VERSION}',
     )
 
     parser.add_argument(
@@ -123,9 +123,9 @@ PanLigra.py -f complex.pdb -y -o ligand_interactions.png \
     parser.add_argument(
         '-o', '--out_file',
         type=str,
-        default='PanViz_interactions.png',
+        default='PanLigra_interactions.png',
         metavar='FILE',
-        help='2D figure filename; must end in .png or .svg (default: PanViz_interactions.png).'
+        help='2D figure filename; must end in .png or .svg (default: PanLigra_interactions.png).'
     )
 
     parser.add_argument(

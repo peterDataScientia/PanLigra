@@ -18,7 +18,7 @@ INTERACTION_CLASSES = {
     "MC": ("metal", "Metal coordination"),
 }
 
-# PanViz v6 publication renderer supports all eight PLIP interaction classes.
+# PanLigra v6 publication renderer supports all eight PLIP interaction classes.
 RENDERED_INTERACTION_CLASSES = {"HPI", "HB", "WB", "SB", "PS", "PC", "XB", "MC"}
 
 
@@ -141,8 +141,8 @@ def write_scientific_exports(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    unified_csv = output_dir / "PanViz_scientific_records.csv"
-    unified_json = output_dir / "PanViz_scientific_records.json"
+    unified_csv = output_dir / "PanLigra_scientific_records.csv"
+    unified_json = output_dir / "PanLigra_scientific_records.json"
 
     records.to_csv(unified_csv, index=False)
     unified_json.write_text(
@@ -157,7 +157,7 @@ def write_scientific_exports(
 
     for code, table in tables.items():
         if not table.empty:
-            table.to_csv(output_dir / f"PanViz_{code}.csv", index=False)
+            table.to_csv(output_dir / f"PanLigra_{code}.csv", index=False)
 
     return {
         "csv": str(unified_csv),

@@ -169,7 +169,7 @@
   </div></details>
   <input id="pv-canvas-w" type="number" min="400" max="5000" step="10" disabled hidden aria-hidden="true">
   <input id="pv-canvas-h" type="number" min="300" max="5000" step="10" disabled hidden aria-hidden="true">
-  <input id="pv-layout-file" type="file" accept="application/json,.json,.panviz" style="display:none">
+  <input id="pv-layout-file" type="file" accept="application/json,.json,.panligra" style="display:none">
   <span id="pv-status">Ready</span>
 </div>
 <script>
@@ -249,7 +249,7 @@
 <script>
 (function(){
 'use strict';
-const initial=__PANVIZ_SCENE__;
+const initial=__PANLIGRA_SCENE__;
 const clone=x=>JSON.parse(JSON.stringify(x));
 const NS='http://www.w3.org/2000/svg';
 const svg=document.getElementById('pv-svg-canvas');
@@ -266,8 +266,8 @@ const interactionToggle=document.getElementById('pv-interaction-toggle');
 function requestHostResize(){
   // Prefer the shared Streamlit content-height reporter. Never feed the iframe
   // viewport/document height back to the host, which can trap table scrolling.
-  if(typeof window.panvizResizeHost==='function'){
-    window.panvizResizeHost();
+  if(typeof window.panligraResizeHost==='function'){
+    window.panligraResizeHost();
     return;
   }
   requestAnimationFrame(()=>{
@@ -822,7 +822,7 @@ function offsetCopiedObject(payload,dx=24,dy=24){const z=clone(payload);if(!z||!
 function insertCopiedObject(z){if(!z||!z.obj)return null;if(z.kind==='bond'){z.obj.id=uniqueCloneId('bondedit');z.obj.sourceBondId=null;z.obj.a=null;z.obj.b=null;z.obj.scientificSourceId=null;z.obj.custom=true;z.obj.editable=true;z.obj.visible=true;state.bondEdits.push(z.obj);const li=ensureLegendItem('BOND');state.legend._selectedItemId=li?.id||state.legend._selectedItemId||null;return{type:'bond',id:z.obj.id};}if(z.kind==='interaction'){const originalId=z.obj.id;z.obj.id=uniqueCloneId('customint');z.obj.scientificSourceId=null;z.obj.residueId=null;z.obj.anchorAtom=null;z.obj.interactionId=null;z.obj.originalDistance=null;z.obj.multiplicity=1;z.obj.custom=true;z.obj.customLineWidth=true;z.obj.customColor=true;z.obj.customDash=true;z.obj.visible=true;state.customInteractions.push(z.obj);const li=ensureLegendItem(z.obj.type);state.legend._selectedItemId=li?.id||state.legend._selectedItemId||null;return{type:'interaction',id:z.obj.id};}if(z.kind==='label'){z.obj.id=uniqueCloneId('label');z.obj.sourceResidue=null;z.obj.residueId=null;z.obj.anchorX=Number(z.obj.x);z.obj.anchorY=Number(z.obj.y);z.obj.leaderVisible=false;z.obj.scientificSourceId=null;z.obj.custom=true;z.obj.visible=true;state.labels.push(z.obj);return{type:'label',id:z.obj.id};}if(z.kind==='distance'){z.obj.id=uniqueCloneId('distance');z.obj.interactionId=null;z.obj.originalDistance=null;z.obj.scientificSourceId=null;z.obj.custom=true;z.obj.visible=true;state.distances.push(z.obj);return{type:'distance',id:z.obj.id};}if(z.kind==='note'){z.obj.id=uniqueCloneId('note');z.obj.visible=true;state.notes.push(z.obj);return{type:'note',id:z.obj.id};}if(z.kind==='arrow'){z.obj.id=uniqueCloneId('arrow');z.obj.visible=true;state.arrows.push(z.obj);return{type:'arrow',id:z.obj.id};}return null;}
 function copySelected(){const zs=selectedResolved().filter(copyAllowed);if(!zs.length){status.textContent='Select an object';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);clipboardObject=items.length===1?items[0]:{kind:'group',items};status.textContent=items.length>1?`Copied ${items.length} objects.`:'Copied.';}
 function pastePayload(payload){
-  if(!payload||payload.panviz!=='annotation'){status.textContent='Clipboard is empty';return;}
+  if(!payload||payload.panligra!=='annotation'){status.textContent='Clipboard is empty';return;}
   if(payload.kind==='group'&&!Array.isArray(payload.items)){status.textContent='Invalid clipboard data';return;}
   const isCut=payload.cut===true && payload.cutConsumed!==true;
   const items=payload.kind==='group'?payload.items:[{kind:payload.kind,obj:payload.obj}];
@@ -835,7 +835,7 @@ function pastePayload(payload){
   if(payload.cut===true){payload.cutConsumed=true;}
   selectedItems=added;selected=added[added.length-1];editPop.style.display='none';renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=isCut?`Pasted ${added.length} object${added.length>1?'s':''}.`:`Pasted ${added.length} object${added.length>1?'s':''}.`;
 }
-function pasteClipboard(){if(clipboardObject){pastePayload({panviz:'annotation',...clipboardObject});return;}status.textContent='Nothing copied';}
+function pasteClipboard(){if(clipboardObject){pastePayload({panligra:'annotation',...clipboardObject});return;}status.textContent='Nothing copied';}
 function duplicateSelected(){const zs=selectedResolved().filter(z=>editableAllowed(z)||z.kind==='moleculeBond');if(!zs.length){status.textContent='Select an object';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);const added=[];pushUndo();for(const item of items){const z=offsetCopiedObject(item);if(z){const ref=insertCopiedObject(z);if(ref)added.push(ref);}}selectedItems=added;selected=added[added.length-1]||null;renderAnnotations();renderSelection();showRibbon();positionRibbon();status.textContent=`Duplicated ${added.length} independent object${added.length>1?'s':''}.`;
 }
 function cutSelected(){const zs=selectedResolved().filter(editableAllowed);if(!zs.length){status.textContent='Select an editable object';return;}const items=zs.map(serializableObjectForClipboard).filter(Boolean);clipboardObject=items.length===1?{...items[0],cut:true,cutConsumed:false}:{kind:'group',items,cut:true,cutConsumed:false};pushUndo();zs.forEach(removeEditableObject);selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';renderAnnotations();renderSelection();status.textContent=`Cut ${zs.length} object${zs.length>1?'s':''}.`;}
@@ -921,9 +921,9 @@ function exportScale(){return Math.max(1,Math.min(6,Number(document.getElementBy
 function scaledExportGeometry(){const g=exportCanvasGeometry(),scale=exportScale();return {baseWidth:g.width,baseHeight:g.height,scale,width:Math.max(1,Math.round(g.width*scale)),height:Math.max(1,Math.round(g.height*scale))};}
 function sceneSvg(){const g=exportCanvasGeometry(),c=svg.cloneNode(true);c.querySelector('#pv-selection')?.remove();c.querySelector('#pv-ui')?.remove();c.querySelector('#pv-molecule-copy-targets')?.remove();c.querySelectorAll('.pv-hit,.pv-copy-hit').forEach(n=>n.remove());c.querySelectorAll('[class="pv-locked"]')?.forEach(n=>n.removeAttribute('class'));c.querySelectorAll('[vector-effect]').forEach(n=>n.removeAttribute('vector-effect'));c.setAttribute('xmlns','http://www.w3.org/2000/svg');c.setAttribute('width',g.width);c.setAttribute('height',g.height);c.setAttribute('viewBox',`0 0 ${g.width} ${g.height}`);c.setAttribute('preserveAspectRatio','xMinYMin meet');c.setAttribute('shape-rendering','geometricPrecision');const bg=el('rect',{x:0,y:0,width:g.width,height:g.height,fill:'#fff'});c.insertBefore(bg,c.firstChild);return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(c);}
 function download(name,type,data){const blob=data instanceof Blob?data:new Blob([data],{type});const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);}
-const PANVIZ_PDF_FONT_FAMILY='PanVizLiberationSans';
-const PANVIZ_PDF_FONT_BASE='https://raw.githubusercontent.com/shantigilbert/liberation-fonts-ttf/ef7161f03e305982b0b247e9a0b7cc472376dd83/';
-const PANVIZ_PDF_FONTS=[
+const PANLIGRA_PDF_FONT_FAMILY='PanLigraLiberationSans';
+const PANLIGRA_PDF_FONT_BASE='https://raw.githubusercontent.com/shantigilbert/liberation-fonts-ttf/ef7161f03e305982b0b247e9a0b7cc472376dd83/';
+const PANLIGRA_PDF_FONTS=[
   ['LiberationSans-Regular.ttf','normal'],
   ['LiberationSans-Bold.ttf','bold'],
   ['LiberationSans-Italic.ttf','italic'],
@@ -936,12 +936,12 @@ function arrayBufferToBase64(buffer){
 }
 async function registerPdfUnicodeFonts(pdf){
   try{
-    const loaded=await Promise.all(PANVIZ_PDF_FONTS.map(async([file,style])=>{
-      const response=await fetch(PANVIZ_PDF_FONT_BASE+file,{mode:'cors',cache:'force-cache'});
+    const loaded=await Promise.all(PANLIGRA_PDF_FONTS.map(async([file,style])=>{
+      const response=await fetch(PANLIGRA_PDF_FONT_BASE+file,{mode:'cors',cache:'force-cache'});
       if(!response.ok)throw new Error(`Font request failed: ${file} (${response.status})`);
       const base64=arrayBufferToBase64(await response.arrayBuffer());
       pdf.addFileToVFS(file,base64);
-      pdf.addFont(file,PANVIZ_PDF_FONT_FAMILY,style,'Identity-H');
+      pdf.addFont(file,PANLIGRA_PDF_FONT_FAMILY,style,'Identity-H');
       return true;
     }));
     return loaded.every(Boolean);
@@ -953,8 +953,8 @@ async function registerPdfUnicodeFonts(pdf){
 function applyPdfUnicodeFont(svgNode){
   svgNode.querySelectorAll('text').forEach(node=>{
     node.dataset.pvPdfOriginalFontFamily=node.getAttribute('font-family')||'Arial';
-    node.setAttribute('font-family',PANVIZ_PDF_FONT_FAMILY);
-    node.style.fontFamily=PANVIZ_PDF_FONT_FAMILY;
+    node.setAttribute('font-family',PANLIGRA_PDF_FONT_FAMILY);
+    node.style.fontFamily=PANLIGRA_PDF_FONT_FAMILY;
   });
 }
 function restoreSvgTextFonts(svgNode){
@@ -1086,7 +1086,7 @@ async function exportPDF(){
 
 function addNote(){pushUndo();const id='note_'+Date.now();const o={id,text:'Text',x:state.width/2,y:state.height/2,w:90,h:24,fontSize:Number(state.style.note?.fontSize||18),fontFamily:state.style.note?.fontFamily||'Arial',fontWeight:Number(state.style.note?.fontWeight||400),textColor:state.style.note?.textColor||'#111111',backgroundColor:state.style.note?.backgroundColor||'#ffffff',backgroundOpacity:Number(state.style.note?.backgroundOpacity??0.92),backgroundEnabled:true,italic:false,underline:false,rotation:0,visible:true};measure(o,o.text);o._originX=o.x;o._originY=o.y;state.notes.push(o);setSelectedRef('note',id,false);renderAnnotations();renderSelection();showRibbon();openTextEditor();}
 function addArrow(){pushUndo();const id='arrow_'+Date.now(),o={id,x1:state.width*.35,y1:state.height*.35,x2:state.width*.65,y2:state.height*.55,color:state.style.arrow?.color||'#111111',width:Number(state.style.arrow?.width||2.5),dash:state.style.arrow?.dash||'',headSize:Number(state.style.arrow?.headSize||10),rotation:0,visible:true};state.arrows.push(o);setSelectedRef('arrow',id,false);renderAnnotations();renderSelection();showRibbon();}
-function validateLoadedLayout(candidate){if(!candidate||typeof candidate!=='object')throw new Error('The selected file is not a PanLigra layout JSON object.');for(const k of ['atoms','bonds','labels','interactions','distances'])if(!Array.isArray(candidate[k]))throw new Error(`Missing required field: ${k}`);if(String(candidate.site||'')!==String(state.site||''))throw new Error('This layout belongs to a different binding site. Load it into the matching PanViz figure.');if(candidate.atoms.length!==state.atoms.length||candidate.bonds.length!==state.bonds.length||candidate.interactions.length!==state.interactions.length)throw new Error('The layout topology/interaction fingerprint does not match the current figure. Layout loading was cancelled.');const a=currentAtomSignature(candidate.atoms),b=currentAtomSignature(state.atoms);if(a!==b)throw new Error('The uploaded layout does not match the current ligand atom set.');}
+function validateLoadedLayout(candidate){if(!candidate||typeof candidate!=='object')throw new Error('The selected file is not a PanLigra layout JSON object.');for(const k of ['atoms','bonds','labels','interactions','distances'])if(!Array.isArray(candidate[k]))throw new Error(`Missing required field: ${k}`);if(String(candidate.site||'')!==String(state.site||''))throw new Error('This layout belongs to a different binding site. Load it into the matching PanLigra figure.');if(candidate.atoms.length!==state.atoms.length||candidate.bonds.length!==state.bonds.length||candidate.interactions.length!==state.interactions.length)throw new Error('The layout topology/interaction fingerprint does not match the current figure. Layout loading was cancelled.');const a=currentAtomSignature(candidate.atoms),b=currentAtomSignature(state.atoms);if(a!==b)throw new Error('The uploaded layout does not match the current ligand atom set.');}
 function currentAtomSignature(atoms){return (atoms||[]).map(a=>`${a.name}|${a.element}`).join('\n');}
 function loadLayoutObject(candidate){validateLoadedLayout(candidate);pushUndo();const preserved={atoms:state.atoms,bonds:state.bonds,site:state.site,scientificData:state.scientificData,moleculeStyle:clone(state.style?.molecule||{}),bondWidth:state.style?.bondWidth,moleculeLabelSize:state.style?.moleculeLabelSize};state=migrate(clone(candidate));state.atoms=preserved.atoms;state.bonds=preserved.bonds;state.site=preserved.site;state.scientificData=preserved.scientificData;state.bondEdits=Array.isArray(state.bondEdits)?state.bondEdits.filter(o=>o&&o.custom===true&&o.sourceBondId==null&&o.a==null&&o.b==null):[];state.style.molecule=preserved.moleculeStyle; if(preserved.bondWidth!=null)state.style.bondWidth=preserved.bondWidth; if(preserved.moleculeLabelSize!=null)state.style.moleculeLabelSize=preserved.moleculeLabelSize;savedInitial=clone(state);past=[];future=[];selectedItems=[];selected=null;editPop.style.display='none';ribbon.style.display='none';syncStylePanel();syncCanvasUI();molecule();moleculeCopyLayer();renderAnnotations();renderSelection();}
 measureLegend(state.legend);cw.value=state.width;ch.value=state.height;syncCanvasUI();molecule();layers.annotations=el('g',{id:'pv-annotations'});svg.appendChild(layers.annotations);moleculeCopyLayer();renderAnnotations();renderSelection();
@@ -1121,7 +1121,7 @@ document.getElementById('pv-apply-int-type').onclick=()=>{pushUndo();const k=doc
 document.getElementById('pv-int-use-global').onclick=()=>{pushUndo();const k=document.getElementById('pv-int-type').value;state.style.interactions[k].custom=false;syncStylePanel();renderAnnotations();renderSelection();};
 
 
-document.getElementById('pv-json').onclick=()=>download((state.site||'PanLigra').replaceAll(':','_')+'_layout.panviz.json','application/json',JSON.stringify(stripPrivate(clone(state)),null,2));
+document.getElementById('pv-json').onclick=()=>download((state.site||'PanLigra').replaceAll(':','_')+'_layout.panligra.json','application/json',JSON.stringify(stripPrivate(clone(state)),null,2));
 document.getElementById('pv-svg').onclick=()=>download((state.site||'PanLigra').replaceAll(':','_')+'_edited.svg','image/svg+xml;charset=utf-8',sceneSvg());
 document.getElementById('pv-png').onclick=()=>{const xg=scaledExportGeometry(),txt=sceneSvg(),blob=new Blob([txt],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob),img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=xg.width;c.height=xg.height;const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);c.toBlob(b=>download((state.site||'PanLigra').replaceAll(':','_')+'_edited_'+xg.scale+'x.png','image/png',b),'image/png');};img.src=url;};
 document.getElementById('pv-pdf').onclick=exportPDF;

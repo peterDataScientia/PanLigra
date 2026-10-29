@@ -25,7 +25,7 @@ from plip.exchange.report import BindingSiteReport
 
 INTERACTION_TYPES = {"HPI", "HB", "PS", "PC", "SB", "WB", "XB", "MC"}
 INTERACTION_ORDER = ("HPI", "HB", "WB", "SB", "PS", "PC", "XB", "MC")
-# Interaction colors retain the original PanViz semantic mapping.
+# Interaction colors retain the original PanLigra semantic mapping.
 # RGB(10, 255, 239) is reserved for the optional 3D glass-bubble residue node.
 BUBBLE_COLOR = "#0AFFEF"  # RGB(10, 255, 239)
 NONCOVALENT_COLOR = "#595959"  # neutral global fallback
@@ -52,9 +52,9 @@ INTERACTION_LABELS = {
 
 
 def format_residue_display(residue_id: str) -> str:
-    """Format an internal residue identifier for human-facing PanViz labels.
+    """Format an internal residue identifier for human-facing PanLigra labels.
 
-    PLIP/PanViz may internally represent a residue as ``TYR192_A``. The editor
+    PLIP/PanLigra may internally represent a residue as ``TYR192_A``. The editor
     should display this as ``TYR192:A`` while preserving the original identifier
     internally for interaction matching and scientific-data integrity.
     """
@@ -183,8 +183,8 @@ def _point_line_distance(px, py, ax, ay, bx, by):
     return math.hypot(px - qx, py - qy)
 
 
-def _exact_panviz_layout(data_points, connections, canvas_width, canvas_height, padding=35.0):
-    """Replicate the established PanViz annotation-placement geometry."""
+def _exact_panligra_layout(data_points, connections, canvas_width, canvas_height, padding=35.0):
+    """Replicate the established PanLigra annotation-placement geometry."""
     base = min(canvas_width, canvas_height)
     residue_font_size = max(17, min(23, int(base * 0.025)))
     distance_font_size = max(14, min(18, int(base * 0.018)))
@@ -394,11 +394,11 @@ def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, an
     distance label. This removes the stale/ghost "fingerprint" caused by moving
     children of a static original SVG.
     """
-    root = tempfile.mkdtemp(prefix="panviz_scene_")
+    root = tempfile.mkdtemp(prefix="panligra_scene_")
     if analysis is not None:
         file_prot = os.path.abspath(str(analysis.get("file_prot")))
         if not os.path.exists(file_prot):
-            raise RuntimeError("The reusable PanViz analysis structure is no longer available.")
+            raise RuntimeError("The reusable PanLigra analysis structure is no longer available.")
         input_pdb = analysis["input_pdb"]
         my_mol = analysis["my_mol"]
         my_interactions = analysis["my_interactions"]
@@ -413,7 +413,7 @@ def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, an
     else:
         structures = os.path.join(root, "structures")
         os.makedirs(structures, exist_ok=True)
-        file_prot = os.path.join(structures, "PanViz_prot.pdb")
+        file_prot = os.path.join(structures, "PanLigra_prot.pdb")
         input_pdb = convert_and_write_pdb(pdb_file, file_prot, bsid)
         my_mol = PDBComplex()
         my_mol.load_pdb(file_prot)
@@ -465,7 +465,7 @@ def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, an
         if aidx is not None and ridx is not None:
             connections.append((aidx, ridx, kind, distance, row_idx))
 
-    layout = _exact_panviz_layout(data_points, connections, width, height)
+    layout = _exact_panligra_layout(data_points, connections, width, height)
     sx = layout["screen_xy"]
 
     atoms = []
@@ -662,7 +662,7 @@ def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, an
             "bondGraphicsEditable": True,
             "annotationLayerFullyEditable": True,
             "plipDataImmutable": True,
-            "initialView": "panviz-layout-scene",
+            "initialView": "panligra-layout-scene",
             "canvasResize": "proportional-content-scale-fit",
             "canvasScrollbars": False,
             "contextualRibbon": "external-overlay",
