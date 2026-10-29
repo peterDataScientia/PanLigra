@@ -10,6 +10,6 @@ def get_version() -> str:
     return value or "0.0.0"
 
 
-PANVIZ_VERSION = get_version()
+PANLIGRA_VERSION = get_version()
 
-PANVIZ_RENDERER_REVISION = "2026.10.01-eight-class"
+PANLIGRA_RENDERER_REVISION = "2026.10.01-eight-class"

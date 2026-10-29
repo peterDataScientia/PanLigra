@@ -12,7 +12,7 @@ PanLigra directly integrates the Protein–Ligand Interaction Profiler (PLIP 3.0
 
 ## Name and compatibility
 
-PanLigra is the public-facing name of the software formerly called PanViz Interactive. The PLIP scientific analysis, locked molecular rendering layer, saved `.panviz.json` layouts, internal APIs and existing `PanViz_*` project files remain supported. The rename does not change interaction detection, measurements, or scientific-record signatures.
+PanLigra is the public-facing name of the software formerly called PanLigra Interactive. The PLIP scientific analysis, locked molecular rendering layer, saved `.panligra.json` layouts, internal APIs and existing `PanLigra_*` project files remain supported. The rename does not change interaction detection, measurements, or scientific-record signatures.
 
 ## Features in PanLigra v1.0.0
 
@@ -94,14 +94,14 @@ These fields are not modified by presentation editing.
 - PLIP-derived rows are marked **Detected**.
 - User-created interaction annotations are added to the same table immediately and marked **Manually added**.
 - Removing a manual interaction removes its table row; detected scientific records remain sourced from the immutable PLIP scientific layer.
-- **Save layout** downloads a portable `.panviz.json` layout.
+- **Save layout** downloads a portable `.panligra.json` layout.
 - **Load layout** imports a previously saved layout and validates that the site and ligand atom fingerprint match before applying it.
 - **SVG**, **PNG**, and **PDF** publication exports are produced directly from the edited figure in the editor.
 
 ## Project bundle layout
 
 ```text
-<compound>_PanViz_project.zip
+<compound>_PanLigra_project.zip
 ├── inputs/
 │   ├── original_receptor.pdb[pqt]
 │   └── original_ligand.pdbqt
@@ -117,8 +117,8 @@ These fields are not modified by presentation editing.
 │   │   └── *_MC.csv
 │   ├── structures/
 │   │   └── *_prot.pdb
-│   ├── PanViz_initial_layout.json
-│   └── PanViz_manifest.json
+│   ├── PanLigra_initial_layout.json
+│   └── PanLigra_manifest.json
 └── PROJECT_README.md
 ```
 
@@ -129,16 +129,16 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-On Windows, use `run_panligra.bat` to launch the same Streamlit application. The historical `run_panviz.bat` launcher is still supported.
+On Windows, use `run_panligra.bat` to launch the same Streamlit application. The historical `run_panligra.bat` launcher is still supported.
 
 PyMOL is not required for the web editor path.
 
 ## Command-line renderer
 
-The CLI renderer is available through `PanLigra.py`; the historical `PanViz.py` command is retained for compatibility:
+The CLI renderer is available through `PanLigra.py`; the historical `PanLigra.py` command is retained for compatibility:
 
 ```bash
-python PanLigra.py -f complex.pdb -y --output_dir PanViz_results --no-pymol
+python PanLigra.py -f complex.pdb -y --output_dir PanLigra_results --no-pymol
 ```
 
 ## Scientific-data policy

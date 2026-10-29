@@ -1,4 +1,4 @@
-"""RCSB PDB discovery and source-preserving coordinate import for PanViz.
+"""RCSB PDB discovery and source-preserving coordinate import for PanLigra.
 
 The importer is intentionally separate from PLIP and the publication renderer:
 structures downloaded from the PDB archive enter the existing PLIP pipeline
@@ -151,7 +151,7 @@ def _fetch_bytes(pdb_id: str, extension: str) -> tuple[bytes, str]:
                 total += len(chunk)
                 if total > MAX_BYTES:
                     raise PDBDatabaseError(
-                        "The archived structure exceeds PanViz's 25 MB import limit."
+                        "The archived structure exceeds PanLigra's 25 MB import limit."
                     )
                 chunks.append(chunk)
         return b"".join(chunks), url
