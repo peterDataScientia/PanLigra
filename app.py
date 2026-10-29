@@ -505,295 +505,383 @@ def _write_project_manifest(result, manifest_path):
     Path(manifest_path).write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-with st.sidebar:
-    print("APPCHK 16 — before input section markdown", flush=True)
-    st.markdown("### Load structure")
-    print("APPCHK 17 — input section markdown OK", flush=True)
-    print("APPCHK 18 — before input_mode radio", flush=True)
-    input_mode=st.radio("Input mode",["PDB complex","Docking PDBQT"],horizontal=True)
-    print(f"APPCHK 19 — input_mode radio OK ({input_mode})", flush=True)
-    print("APPCHK 20 — before session workspace", flush=True)
-    if "panligra_work_root" not in st.session_state or not Path(st.session_state.panligra_work_root).exists():
-        st.session_state.panligra_work_root=tempfile.mkdtemp(prefix="panligra_")
-    work_root=Path(st.session_state.panligra_work_root)
-    print(f"APPCHK 21 — session workspace OK ({work_root})", flush=True)
-    source_files=[]
-    source_payloads=[]
-    source_provenance=None
-    pose_index=None
-    pose_score=None
 
-    if input_mode=="PDB complex":
-        structure_source = st.radio(
-            "Structure source",
-            ["Upload PDB", "Search RCSB PDB"],
-            horizontal=True,
-            key="panligra_pdb_source",
-        )
-        if structure_source == "Upload PDB":
-            uploaded=st.file_uploader(
-                "Upload protein–ligand PDB complex",type=["pdb"],
-                help="Include receptor and ligand coordinates.",
+def _current_result():
+    return st.session_state.get("panligra_result")
+
+def _result_required():
+    result = _current_result()
+    if not result:
+        st.info("No analysis is loaded. Open Structures to import a complex and run PLIP.")
+        st.page_link(structures_pg, label="Open Structures", icon=":material/upload_file:")
+        st.stop()
+    return result
+
+def home_page():
+    st.title("Scientific workspace")
+    st.caption("Protein–ligand interaction profiling, 2D visualization and reproducible outputs.")
+    result = _current_result()
+    a, b, c = st.columns(3)
+    a.metric("Project status", "Analysis ready" if result else "Not started")
+    b.metric("PLIP interactions", int(len(result["scientific_df"])) if result else 0)
+    c.metric("Selected binding site", result["selected_site"] if result else "—")
+    st.markdown("### Workflow")
+    st.write("Import a PDB complex or docking poses, analyze a binding site, inspect PLIP records, customize the 2D figure, and export the results.")
+    st.page_link(structures_pg, label="1. Import structures", icon=":material/upload_file:")
+    if result:
+        st.page_link(interactions_pg, label="2. Examine interactions", icon=":material/science:")
+        st.page_link(editor_pg, label="3. Open the 2D editor", icon=":material/draw:")
+        st.page_link(export_pg, label="4. Export results", icon=":material/download:")
+    st.caption("The molecular geometry and scientific PLIP records remain separate from editable presentation annotations.")
+
+def projects_page():
+    st.title("Projects")
+    result = _current_result()
+    if result:
+        st.success("Current analysis is available in this browser session.")
+        st.write("**Selected site:**", result["selected_site"])
+        st.write("**Input:**", result["input_mode"])
+        st.write("**Source files:**", ", ".join(v["name"] for v in result["source_files"]))
+        st.caption("Project data is retained during navigation in the current session. For longer-term storage, download the project bundle.")
+        if result.get("project_zip") and Path(result["project_zip"]).is_file():
+            with open(result["project_zip"], "rb") as fp:
+                st.download_button("Download project bundle", data=fp, file_name=Path(result["project_zip"]).name, mime="application/zip")
+    else:
+        st.info("There is no active project.")
+    st.page_link(structures_pg, label="Load or analyze a structure", icon=":material/upload_file:")
+
+def structures_page():
+    st.title("Structures")
+    st.caption("Load a deposited complex or prepare receptor and ligand docking inputs.")
+    with st.sidebar:
+        print("APPCHK 16 — before input section markdown", flush=True)
+        st.markdown("### Load structure")
+        print("APPCHK 17 — input section markdown OK", flush=True)
+        print("APPCHK 18 — before input_mode radio", flush=True)
+        input_mode=st.radio("Input mode",["PDB complex","Docking PDBQT"],horizontal=True)
+        print(f"APPCHK 19 — input_mode radio OK ({input_mode})", flush=True)
+        print("APPCHK 20 — before session workspace", flush=True)
+        if "panligra_work_root" not in st.session_state or not Path(st.session_state.panligra_work_root).exists():
+            st.session_state.panligra_work_root=tempfile.mkdtemp(prefix="panligra_")
+        work_root=Path(st.session_state.panligra_work_root)
+        print(f"APPCHK 21 — session workspace OK ({work_root})", flush=True)
+        source_files=[]
+        source_payloads=[]
+        source_provenance=None
+        pose_index=None
+        pose_score=None
+    
+        if input_mode=="PDB complex":
+            structure_source = st.radio(
+                "Structure source",
+                ["Upload PDB", "Search RCSB PDB"],
+                horizontal=True,
+                key="panligra_pdb_source",
             )
-            if not uploaded:
-                st.stop()
-            file_bytes=uploaded.getvalue()
-            filename=Path(uploaded.name).name
-            pdb_path=work_root/filename
-            pdb_path.write_bytes(file_bytes)
-            source_stem=Path(filename).stem
-            source_files=[filename]
-            source_payloads=[(filename,file_bytes)]
-        else:
-            with st.form("panligra_rcsb_search_form"):
-                mode = st.selectbox(
-                    "Search by",
-                    ["Keywords", "PDB ID", "Protein name", "Ligand name / ID"],
-                    key="panligra_rcsb_mode",
+            if structure_source == "Upload PDB":
+                uploaded=st.file_uploader(
+                    "Upload protein–ligand PDB complex",type=["pdb"],
+                    help="Include receptor and ligand coordinates.",
                 )
-                search_term = st.text_input(
-                    "Search PDB database",
-                    placeholder="e.g. plasmepsin II, 1LF2, R37",
-                    key="panligra_rcsb_query",
-                )
-                with st.expander("Optional search filters"):
-                    organism = st.text_input(
-                        "Source organism", placeholder="e.g. Plasmodium falciparum"
+                if not uploaded:
+                    st.stop()
+                file_bytes=uploaded.getvalue()
+                filename=Path(uploaded.name).name
+                pdb_path=work_root/filename
+                pdb_path.write_bytes(file_bytes)
+                source_stem=Path(filename).stem
+                source_files=[filename]
+                source_payloads=[(filename,file_bytes)]
+            else:
+                with st.form("panligra_rcsb_search_form"):
+                    mode = st.selectbox(
+                        "Search by",
+                        ["Keywords", "PDB ID", "Protein name", "Ligand name / ID"],
+                        key="panligra_rcsb_mode",
                     )
-                    ligand_only = st.checkbox(
-                        "Require a nonpolymer component", value=True,
-                        help="Includes ions and additives.",
+                    search_term = st.text_input(
+                        "Search PDB database",
+                        placeholder="e.g. plasmepsin II, 1LF2, R37",
+                        key="panligra_rcsb_query",
                     )
-                submitted = st.form_submit_button("Search RCSB PDB", type="primary")
-            if submitted:
-                try:
-                    with st.spinner("Searching the RCSB PDB database…"):
-                        options = dict(
-                            query=search_term, mode=mode, organism=organism,
-                            ligand_only=ligand_only,
+                    with st.expander("Optional search filters"):
+                        organism = st.text_input(
+                            "Source organism", placeholder="e.g. Plasmodium falciparum"
                         )
-                        found = rcsb_pdb.search(**options)
-                        rows = rcsb_pdb.summaries(found["ids"])
-                    st.session_state.panligra_rcsb_search = dict(
-                        options=options, result=found, rows=rows, start=0
+                        ligand_only = st.checkbox(
+                            "Require a nonpolymer component", value=True,
+                            help="Includes ions and additives.",
+                        )
+                    submitted = st.form_submit_button("Search RCSB PDB", type="primary")
+                if submitted:
+                    try:
+                        with st.spinner("Searching the RCSB PDB database…"):
+                            options = dict(
+                                query=search_term, mode=mode, organism=organism,
+                                ligand_only=ligand_only,
+                            )
+                            found = rcsb_pdb.search(**options)
+                            rows = rcsb_pdb.summaries(found["ids"])
+                        st.session_state.panligra_rcsb_search = dict(
+                            options=options, result=found, rows=rows, start=0
+                        )
+                        st.session_state.pop("panligra_rcsb_loaded", None)
+                    except rcsb_pdb.PDBDatabaseError as exc:
+                        st.error(str(exc))
+                        st.session_state.pop("panligra_rcsb_search", None)
+                search_state = st.session_state.get("panligra_rcsb_search")
+                if not search_state:
+                    st.stop()
+                matches=search_state["result"]
+                if not matches["ids"]:
+                    st.warning("No matching structures.")
+                    
+                    st.stop()
+                start=search_state["start"]
+                st.caption(f'{matches["total"]} results · {start+1}–{start+len(matches["ids"])}')
+                prev_col,next_col=st.columns(2)
+                previous=prev_col.button("Previous PDB results", disabled=start==0)
+                following=next_col.button(
+                    "Next PDB results", disabled=start+len(matches["ids"])>=matches["total"]
+                )
+                if previous or following:
+                    next_start=max(0,start+(-10 if previous else 10))
+                    try:
+                        with st.spinner("Loading PDB search results…"):
+                            found=rcsb_pdb.search(
+                                **search_state["options"], start=next_start
+                            )
+                            rows=rcsb_pdb.summaries(found["ids"])
+                        st.session_state.panligra_rcsb_search=dict(
+                            options=search_state["options"],result=found,
+                            rows=rows,start=next_start,
+                        )
+                        st.rerun()
+                    except rcsb_pdb.PDBDatabaseError as exc:
+                        st.warning(str(exc))
+                title_by_id = {row["PDB ID"]: row.get("Title", "") for row in search_state["rows"]}
+                pdb_id=st.selectbox(
+                    "Select PDB structure",
+                    matches["ids"],
+                    format_func=lambda x: f"{x} · {title_by_id.get(x, '')[:58]}",
+                    key="panligra_rcsb_selected_id",
+                )
+                metadata=next(
+                    (row for row in search_state["rows"] if row["PDB ID"]==pdb_id), {}
+                )
+                st.markdown(f"[View {pdb_id} at RCSB](https://www.rcsb.org/structure/{pdb_id})")
+                if st.button("Load selected PDB structure", type="primary"):
+                    try:
+                        with st.spinner(f"Downloading {pdb_id} from RCSB PDB…"):
+                            data=rcsb_pdb.download(pdb_id)
+                        st.session_state.panligra_rcsb_loaded=data
+                        st.session_state.pop("panligra_result", None)
+                        st.rerun()
+                    except rcsb_pdb.PDBDatabaseError as exc:
+                        st.error(str(exc))
+                loaded=st.session_state.get("panligra_rcsb_loaded")
+                if not loaded or loaded.get("pdb_id")!=pdb_id:
+                    st.stop()
+                pdb_path=work_root/loaded["pdb_filename"]
+                pdb_path.write_bytes(loaded["pdb_bytes"])
+                source_stem=loaded["pdb_id"]
+                source_files=[loaded["source_filename"]]
+                source_payloads=[
+                    (loaded["source_filename"],loaded["original_bytes"])
+                ]
+                if loaded["converted"]:
+                    # Preserve both original archive mmCIF and PLIP input PDB in bundle.
+                    source_files.append(loaded["pdb_filename"])
+                    source_payloads.append(
+                        (loaded["pdb_filename"],loaded["pdb_bytes"])
                     )
-                    st.session_state.pop("panligra_rcsb_loaded", None)
-                except rcsb_pdb.PDBDatabaseError as exc:
-                    st.error(str(exc))
-                    st.session_state.pop("panligra_rcsb_search", None)
-            search_state = st.session_state.get("panligra_rcsb_search")
-            if not search_state:
+                source_provenance={
+                    "database": "RCSB Protein Data Bank",
+                    "pdb_id": loaded["pdb_id"],
+                    "download_url": loaded["source_url"],
+                    "retrieved_utc": loaded["retrieved_utc"],
+                    "archive_format": loaded["source_format"],
+                    "converted_to_pdb_for_plip": bool(loaded["converted"]),
+                }
+        else:
+            receptor_upload=st.file_uploader(
+                "Upload receptor PDB / PDBQT", type=["pdb", "pdbqt"],
+                key="pdbqt_receptor_upload",
+            )
+            ligand_upload=st.file_uploader(
+                "Upload ligand or Vina PDBQT", type=["pdbqt"],
+                help="Supports multiple poses.",
+                key="pdbqt_ligand_upload",
+            )
+            if not receptor_upload or not ligand_upload:
                 st.stop()
-            matches=search_state["result"]
-            if not matches["ids"]:
-                st.warning("No matching structures.")
+            receptor_path=work_root/receptor_upload.name; receptor_bytes=receptor_upload.getvalue(); receptor_path.write_bytes(receptor_bytes)
+            ligand_path=work_root/ligand_upload.name; ligand_bytes=ligand_upload.getvalue(); ligand_path.write_bytes(ligand_bytes)
+            source_files=[receptor_upload.name, ligand_upload.name]
+            source_payloads=[(receptor_upload.name,receptor_bytes),(ligand_upload.name,ligand_bytes)]
+            pose_blocks=_extract_pdbqt_models(ligand_path)
+            scores=_pose_scores(ligand_path)
+            pose_options=list(range(1,len(pose_blocks)+1))
+            def _pose_label(x):
+                score=scores[x-1] if x-1 < len(scores) else None
+                return f"Pose {x}" + (f"  ·  Vina {score:.2f} kcal/mol" if score is not None else "")
+            pose_index=st.selectbox("Docking pose",pose_options,format_func=_pose_label)-1
+            pose_score=scores[pose_index] if pose_index < len(scores) else None
+            try:
+                pdb_path,nposes=_build_pdbqt_complex(receptor_path,ligand_path,work_root,pose_index=pose_index)
+            except Exception as exc:
+                st.error(f"PDBQT preparation failed: {exc}")
                 
                 st.stop()
-            start=search_state["start"]
-            st.caption(f'{matches["total"]} results · {start+1}–{start+len(matches["ids"])}')
-            prev_col,next_col=st.columns(2)
-            previous=prev_col.button("Previous PDB results", disabled=start==0)
-            following=next_col.button(
-                "Next PDB results", disabled=start+len(matches["ids"])>=matches["total"]
-            )
-            if previous or following:
-                next_start=max(0,start+(-10 if previous else 10))
-                try:
-                    with st.spinner("Loading PDB search results…"):
-                        found=rcsb_pdb.search(
-                            **search_state["options"], start=next_start
-                        )
-                        rows=rcsb_pdb.summaries(found["ids"])
-                    st.session_state.panligra_rcsb_search=dict(
-                        options=search_state["options"],result=found,
-                        rows=rows,start=next_start,
-                    )
-                    st.rerun()
-                except rcsb_pdb.PDBDatabaseError as exc:
-                    st.warning(str(exc))
-            title_by_id = {row["PDB ID"]: row.get("Title", "") for row in search_state["rows"]}
-            pdb_id=st.selectbox(
-                "Select PDB structure",
-                matches["ids"],
-                format_func=lambda x: f"{x} · {title_by_id.get(x, '')[:58]}",
-                key="panligra_rcsb_selected_id",
-            )
-            metadata=next(
-                (row for row in search_state["rows"] if row["PDB ID"]==pdb_id), {}
-            )
-            st.markdown(f"[View {pdb_id} at RCSB](https://www.rcsb.org/structure/{pdb_id})")
-            if st.button("Load selected PDB structure", type="primary"):
-                try:
-                    with st.spinner(f"Downloading {pdb_id} from RCSB PDB…"):
-                        data=rcsb_pdb.download(pdb_id)
-                    st.session_state.panligra_rcsb_loaded=data
-                    st.session_state.pop("panligra_result", None)
-                    st.rerun()
-                except rcsb_pdb.PDBDatabaseError as exc:
-                    st.error(str(exc))
-            loaded=st.session_state.get("panligra_rcsb_loaded")
-            if not loaded or loaded.get("pdb_id")!=pdb_id:
-                st.stop()
-            pdb_path=work_root/loaded["pdb_filename"]
-            pdb_path.write_bytes(loaded["pdb_bytes"])
-            source_stem=loaded["pdb_id"]
-            source_files=[loaded["source_filename"]]
-            source_payloads=[
-                (loaded["source_filename"],loaded["original_bytes"])
-            ]
-            if loaded["converted"]:
-                # Preserve both original archive mmCIF and PLIP input PDB in bundle.
-                source_files.append(loaded["pdb_filename"])
-                source_payloads.append(
-                    (loaded["pdb_filename"],loaded["pdb_bytes"])
+            source_stem=Path(ligand_upload.name).stem
+    
+    
+        try:binding_sites=_eligible_binding_sites(pdb_path)
+        except Exception as exc:st.error(f"PLIP could not read the structure: {exc}");st.stop()
+        if not binding_sites:st.error("No eligible ligand-binding site found.");st.stop()
+        st.markdown("### Analysis")
+        selected_site=st.selectbox("Ligand / binding site", binding_sites)
+        with st.expander("Figure size", expanded=False):
+            out_width=st.number_input("Figure width",min_value=700,max_value=3000,value=1200,step=100)
+            out_height=st.number_input("Figure height",min_value=500,max_value=3000,value=850,step=50)
+        analyze=st.button("Open interaction editor",type="primary",use_container_width=True)
+    
+    
+    result_key_payload = {
+        "panligra_version": PANLIGRA_VERSION,
+        "renderer_revision": PANLIGRA_RENDERER_REVISION,
+        "mode": input_mode,
+        "source_hashes": [_sha256_bytes(x[1]) for x in source_payloads],
+        "pose": pose_index,
+        "site": selected_site,
+        "width": int(out_width),
+        "height": int(out_height),
+    }
+    result_key=_sha256_bytes(json.dumps(result_key_payload,sort_keys=True).encode())
+    
+    if analyze:
+        results_root=work_root/"PanLigra_results";results_root.mkdir(parents=True,exist_ok=True)
+        with st.spinner(" "):
+            try:
+                analysis_obj=plip_2d_interactions(
+                    str(pdb_path),
+                    selected_site,
+                    save_files=False,
+                    save_pymol=False,
+                    canvas_height=int(out_height),
+                    canvas_width=int(out_width),
+                    output_dir=str(results_root),
                 )
-            source_provenance={
-                "database": "RCSB Protein Data Bank",
-                "pdb_id": loaded["pdb_id"],
-                "download_url": loaded["source_url"],
-                "retrieved_utc": loaded["retrieved_utc"],
-                "archive_format": loaded["source_format"],
-                "converted_to_pdb_for_plip": bool(loaded["converted"]),
-            }
-    else:
-        receptor_upload=st.file_uploader(
-            "Upload receptor PDB / PDBQT", type=["pdb", "pdbqt"],
-            key="pdbqt_receptor_upload",
-        )
-        ligand_upload=st.file_uploader(
-            "Upload ligand or Vina PDBQT", type=["pdbqt"],
-            help="Supports multiple poses.",
-            key="pdbqt_ligand_upload",
-        )
-        if not receptor_upload or not ligand_upload:
-            st.stop()
-        receptor_path=work_root/receptor_upload.name; receptor_bytes=receptor_upload.getvalue(); receptor_path.write_bytes(receptor_bytes)
-        ligand_path=work_root/ligand_upload.name; ligand_bytes=ligand_upload.getvalue(); ligand_path.write_bytes(ligand_bytes)
-        source_files=[receptor_upload.name, ligand_upload.name]
-        source_payloads=[(receptor_upload.name,receptor_bytes),(ligand_upload.name,ligand_bytes)]
-        pose_blocks=_extract_pdbqt_models(ligand_path)
-        scores=_pose_scores(ligand_path)
-        pose_options=list(range(1,len(pose_blocks)+1))
-        def _pose_label(x):
-            score=scores[x-1] if x-1 < len(scores) else None
-            return f"Pose {x}" + (f"  ·  Vina {score:.2f} kcal/mol" if score is not None else "")
-        pose_index=st.selectbox("Docking pose",pose_options,format_func=_pose_label)-1
-        pose_score=scores[pose_index] if pose_index < len(scores) else None
-        try:
-            pdb_path,nposes=_build_pdbqt_complex(receptor_path,ligand_path,work_root,pose_index=pose_index)
-        except Exception as exc:
-            st.error(f"PDBQT preparation failed: {exc}")
-            
-            st.stop()
-        source_stem=Path(ligand_upload.name).stem
+                site_dir=Path(analysis_obj["binding_site_dir"])
+                interaction_dir=Path(analysis_obj["interactions_dir"])
+                scientific_df,scientific_tables=build_scientific_records(analysis_obj["my_interactions"])
+                scientific_exports=write_scientific_exports(
+                    scientific_df,
+                    scientific_tables,
+                    interaction_dir,
+                )
+                scene,scene_root=build_editor_scene(
+                    str(pdb_path),
+                    selected_site,
+                    width=int(out_width),
+                    height=int(out_height),
+                    base_svg=None,
+                    analysis=analysis_obj,
+                )
+                figure_df=build_figure_records(scene)
+                (site_dir/"PanLigra_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
+                result={
+                    "key": result_key,
+                    "input_mode": input_mode,
+                    "source_provenance": source_provenance,
+                    "source_files": [
+                        {"name":name,"sha256":_sha256_bytes(data)} for name,data in source_payloads
+                    ],
+                    "source_payloads": source_payloads,
+                    "selected_site": selected_site,
+                    "figure_width": int(out_width),
+                    "figure_height": int(out_height),
+                    "pose_index": pose_index,
+                    "pose_score": pose_score,
+                    "binding_site_count": len(binding_sites),
+                    "interaction_df": figure_df,
+                    "figure_interaction_df": figure_df,
+                    "scientific_df": scientific_df,
+                    "site_dir": str(site_dir),
+                    "prepared_pdb": str(analysis_obj["file_prot"]),
+                    "results_root": str(results_root),
+                    "scene": scene,
+                    "analysis_obj": analysis_obj,
+                    "scientific_exports": scientific_exports,
+                    "scientific_signature": scientific_exports["signature"],
+                }
+                inputs_dir=results_root/"inputs";inputs_dir.mkdir(parents=True,exist_ok=True)
+                for name,data in source_payloads:
+                    target=inputs_dir/Path(name).name
+                    target.write_bytes(data)
+                project_readme = results_root/"PROJECT_README.md"
+                project_readme.write_text(
+                    f"# PanLigra {PANLIGRA_VERSION} project bundle\n\n"
+                    "This package contains the original structure input file(s), the PLIP-prepared complex, "
+                    "canonical PLIP scientific records, the initial editable layout, "
+                    "and a machine-readable manifest. Presentation styling in PanLigra does not modify the underlying "
+                    "PLIP scientific interaction records. Use the editor's **Save layout** and **Load layout** controls "
+                    "to carry edited presentation state between sessions.\n",
+                    encoding="utf-8"
+                )
+                _write_project_manifest(result, site_dir/"PanLigra_manifest.json")
+                zip_path=results_root/f"{source_stem}_PanLigra_project.zip"
+                _zip_tree(results_root,zip_path)
+                result["project_zip"]=str(zip_path)
+                st.session_state.panligra_result=result
+            except Exception as exc:
+                st.error(f"PanLigra analysis failed: {exc}")
+                st.stop()
+    
+    result=st.session_state.get("panligra_result")
+    if not result or result.get("key")!=result_key:
+        st.stop()
+    if st.session_state.get("panligra_result"):
+        st.success("PLIP analysis is ready. Continue to Interactions or 2D Editor.")
+        st.page_link(interactions_pg, label="View interaction records", icon=":material/science:")
+        st.page_link(editor_pg, label="Open 2D editor", icon=":material/draw:")
 
+def interactions_page():
+    result = _result_required()
+    st.title("Interactions")
+    st.caption("Original PLIP-derived scientific records; presentation edits do not alter these values.")
+    st.write("**Binding site:**", result["selected_site"])
+    st.write("**Scientific signature (SHA-256):**", result.get("scientific_signature", "Unavailable"))
+    st.dataframe(result["scientific_df"], use_container_width=True, hide_index=True)
+    for label,frame in (("Figure interaction records",result["figure_interaction_df"]),):
+        with st.expander(label):
+            st.dataframe(frame,use_container_width=True,hide_index=True)
+    st.page_link(editor_pg,label="Customize diagram",icon=":material/draw:")
 
-    try:binding_sites=_eligible_binding_sites(pdb_path)
-    except Exception as exc:st.error(f"PLIP could not read the structure: {exc}");st.stop()
-    if not binding_sites:st.error("No eligible ligand-binding site found.");st.stop()
-    st.markdown("### Analysis")
-    selected_site=st.selectbox("Ligand / binding site", binding_sites)
-    with st.expander("Figure size", expanded=False):
-        out_width=st.number_input("Figure width",min_value=700,max_value=3000,value=1200,step=100)
-        out_height=st.number_input("Figure height",min_value=500,max_value=3000,value=850,step=50)
-    analyze=st.button("Open interaction editor",type="primary",use_container_width=True)
+def editor_page():
+    result = _result_required()
+    st.title("2D Editor")
+    st.caption("Edit graphical annotations while preserving PLIP measurements and molecular connectivity.")
+    render_editor(result["scene"])
 
+def export_page():
+    result = _result_required()
+    st.title("Export")
+    st.caption("Scientific records and project files are independent of presentation editing.")
+    st.write("**PLIP interaction records**")
+    st.download_button("Scientific CSV",data=result["scientific_df"].to_csv(index=False).encode("utf-8"),file_name="PanLigra_interactions.csv",mime="text/csv")
+    st.download_button("Scientific JSON",data=result["scientific_df"].to_json(orient="records",indent=2).encode("utf-8"),file_name="PanLigra_interactions.json",mime="application/json")
+    if result.get("project_zip") and Path(result["project_zip"]).is_file():
+        with open(result["project_zip"],"rb") as fp:
+            st.download_button("Project bundle ZIP",data=fp,file_name=Path(result["project_zip"]).name,mime="application/zip")
+    st.info("SVG, PNG, PDF and editable layout exports are available directly in the 2D Editor, so they reflect the actual on-canvas presentation.")
+    st.page_link(editor_pg,label="Open 2D Editor",icon=":material/draw:")
 
-result_key_payload = {
-    "panligra_version": PANLIGRA_VERSION,
-    "renderer_revision": PANLIGRA_RENDERER_REVISION,
-    "mode": input_mode,
-    "source_hashes": [_sha256_bytes(x[1]) for x in source_payloads],
-    "pose": pose_index,
-    "site": selected_site,
-    "width": int(out_width),
-    "height": int(out_height),
-}
-result_key=_sha256_bytes(json.dumps(result_key_payload,sort_keys=True).encode())
-
-if analyze:
-    results_root=work_root/"PanLigra_results";results_root.mkdir(parents=True,exist_ok=True)
-    with st.spinner(" "):
-        try:
-            analysis_obj=plip_2d_interactions(
-                str(pdb_path),
-                selected_site,
-                save_files=False,
-                save_pymol=False,
-                canvas_height=int(out_height),
-                canvas_width=int(out_width),
-                output_dir=str(results_root),
-            )
-            site_dir=Path(analysis_obj["binding_site_dir"])
-            interaction_dir=Path(analysis_obj["interactions_dir"])
-            scientific_df,scientific_tables=build_scientific_records(analysis_obj["my_interactions"])
-            scientific_exports=write_scientific_exports(
-                scientific_df,
-                scientific_tables,
-                interaction_dir,
-            )
-            scene,scene_root=build_editor_scene(
-                str(pdb_path),
-                selected_site,
-                width=int(out_width),
-                height=int(out_height),
-                base_svg=None,
-                analysis=analysis_obj,
-            )
-            figure_df=build_figure_records(scene)
-            (site_dir/"PanLigra_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
-            result={
-                "key": result_key,
-                "input_mode": input_mode,
-                "source_provenance": source_provenance,
-                "source_files": [
-                    {"name":name,"sha256":_sha256_bytes(data)} for name,data in source_payloads
-                ],
-                "source_payloads": source_payloads,
-                "selected_site": selected_site,
-                "figure_width": int(out_width),
-                "figure_height": int(out_height),
-                "pose_index": pose_index,
-                "pose_score": pose_score,
-                "binding_site_count": len(binding_sites),
-                "interaction_df": figure_df,
-                "figure_interaction_df": figure_df,
-                "scientific_df": scientific_df,
-                "site_dir": str(site_dir),
-                "prepared_pdb": str(analysis_obj["file_prot"]),
-                "results_root": str(results_root),
-                "scene": scene,
-                "analysis_obj": analysis_obj,
-                "scientific_exports": scientific_exports,
-                "scientific_signature": scientific_exports["signature"],
-            }
-            inputs_dir=results_root/"inputs";inputs_dir.mkdir(parents=True,exist_ok=True)
-            for name,data in source_payloads:
-                target=inputs_dir/Path(name).name
-                target.write_bytes(data)
-            project_readme = results_root/"PROJECT_README.md"
-            project_readme.write_text(
-                f"# PanLigra {PANLIGRA_VERSION} project bundle\n\n"
-                "This package contains the original structure input file(s), the PLIP-prepared complex, "
-                "canonical PLIP scientific records, the initial editable layout, "
-                "and a machine-readable manifest. Presentation styling in PanLigra does not modify the underlying "
-                "PLIP scientific interaction records. Use the editor's **Save layout** and **Load layout** controls "
-                "to carry edited presentation state between sessions.\n",
-                encoding="utf-8"
-            )
-            _write_project_manifest(result, site_dir/"PanLigra_manifest.json")
-            zip_path=results_root/f"{source_stem}_PanLigra_project.zip"
-            _zip_tree(results_root,zip_path)
-            result["project_zip"]=str(zip_path)
-            st.session_state.panligra_result=result
-        except Exception as exc:
-            st.error(f"PanLigra analysis failed: {exc}")
-            st.stop()
-
-result=st.session_state.get("panligra_result")
-if not result or result.get("key")!=result_key:
-    st.stop()
-
-render_editor(result["scene"])
-
-
+home_pg = st.Page(home_page,title="Home",icon=":material/home:",default=True)
+projects_pg = st.Page(projects_page,title="Projects",icon=":material/folder:")
+structures_pg = st.Page(structures_page,title="Structures",icon=":material/upload_file:")
+interactions_pg = st.Page(interactions_page,title="Interactions",icon=":material/science:")
+editor_pg = st.Page(editor_page,title="2D Editor",icon=":material/draw:")
+export_pg = st.Page(export_page,title="Export",icon=":material/download:")
+navigation = st.navigation([home_pg, projects_pg, structures_pg, interactions_pg, editor_pg, export_pg],position="sidebar")
+navigation.run()
