@@ -31,7 +31,7 @@ jobs:
 
       - name: Compile PanLigra modules
         run: |
-          python -m py_compile utils.py interactive_engine.py app.py PanLigra.py PanViz.py scientific_records.py panviz_version.py rcsb_pdb.py
+          python -m py_compile utils.py interactive_engine.py app.py PanLigra.py PanLigra.py scientific_records.py panligra_version.py rcsb_pdb.py
 
       - name: Verify publication renderer and v6 architecture
         run: |

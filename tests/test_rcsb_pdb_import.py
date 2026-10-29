@@ -1,4 +1,4 @@
-"""RCSB database import is independent of PanViz's locked scientific renderer."""
+"""RCSB database import is independent of PanLigra's locked scientific renderer."""
 from __future__ import annotations
 
 import json

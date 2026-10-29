@@ -84,7 +84,7 @@ def test_editor_has_no_embedded_manual_sections():
 
 
 def test_main_workspace_has_no_decorative_placeholder_or_spinner_manual_text():
-    assert 'panviz-title' in APP
+    assert 'panligra-title' in APP
     assert 'No structure loaded' not in APP
     assert 'workspace_empty' not in APP
     assert 'pv-empty-workspace' not in APP
@@ -103,23 +103,23 @@ def test_editor_iframe_and_interaction_table_are_accessible():
     assert "document.documentElement?.scrollHeight||0" not in EDITOR
 
 
-def test_panviz_wordmark_is_not_clipped_by_header_styles():
+def test_panligra_wordmark_is_not_clipped_by_header_styles():
     assert '<span class="pv-wordmark">PanLigra</span>' in APP
-    assert '<span class="pv-version">v{PANVIZ_VERSION}</span>' in APP
-    assert ".panviz-title{display:flex;align-items:center;flex-wrap:wrap;" in APP
+    assert '<span class="pv-version">v{PANLIGRA_VERSION}</span>' in APP
+    assert ".panligra-title{display:flex;align-items:center;flex-wrap:wrap;" in APP
     assert "min-height:46px" in APP
     assert "line-height:1.5!important" in APP
     assert "line-height:1.12!important" not in APP
-    assert ".panviz-shell{padding:12px 16px!important;" in APP
+    assert ".panligra-shell{padding:12px 16px!important;" in APP
     assert "overflow:visible!important" in APP
 
 
-def test_generated_panviz_logo_is_used_for_header_and_favicon():
-    logo_path = Path("assets/panviz_logo_icon.png")
+def test_generated_panligra_logo_is_used_for_header_and_favicon():
+    logo_path = Path("assets/panligra_logo_icon.png")
     assert logo_path.is_file()
     assert logo_path.read_bytes()[:8] == bytes.fromhex("89504e470d0a1a0a")
     assert logo_path.stat().st_size > 1000
-    assert 'LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panviz_logo_icon.png"' in APP
+    assert 'LOGO_PATH = Path(__file__).resolve().parent / "assets" / "panligra_logo_icon.png"' in APP
     assert 'page_icon=Image.open(LOGO_PATH)' in APP
     assert 'src="data:image/png;base64,{LOGO_BASE64}"' in APP
     assert 'alt="PanLigra logo"' in APP
@@ -130,4 +130,4 @@ def test_generated_panviz_logo_is_used_for_header_and_favicon():
 def test_header_logo_stays_compact():
     assert ".pv-brand-logo{display:block;width:36px;height:36px;" in APP
     assert "flex:0 0 36px" in APP
-    assert ".panviz-brand{display:flex;align-items:center;gap:8px;min-height:46px;" in APP
+    assert ".panligra-brand{display:flex;align-items:center;gap:8px;min-height:46px;" in APP

@@ -4,7 +4,7 @@ import pandas as pd
 
 import scientific_records
 import utils
-from panviz_version import PANVIZ_VERSION
+from panligra_version import PANLIGRA_VERSION
 
 
 class FakeBindingSiteReport:
@@ -34,7 +34,7 @@ class FakeBindingSiteReport:
 
 
 def test_v6_version():
-    assert PANVIZ_VERSION == "6.0.0"
+    assert PANLIGRA_VERSION == "6.0.0"
 
 
 def test_scientific_layer_normalizes_all_eight_plip_classes(monkeypatch):
@@ -93,14 +93,14 @@ def test_scientific_exports_include_unified_and_per_class_files(monkeypatch, tmp
     assert Path(result["json"]).exists()
     assert result["signature"] == scientific_records.scientific_signature(records)
     for code in scientific_records.INTERACTION_CLASSES:
-        assert (tmp_path / f"PanViz_{code}.csv").exists()
+        assert (tmp_path / f"PanLigra_{code}.csv").exists()
 
 
 def test_v6_app_integrity_guards_are_present():
     source = Path("app.py").read_text(encoding="utf-8")
 
     # One temporary workspace per Streamlit session, not one per rerun.
-    assert '"panviz_work_root" not in st.session_state' in source
+    assert '"panligra_work_root" not in st.session_state' in source
 
     # Docked ligand atom serials start after the receptor maximum serial.
     assert "ligand_start=(max(receptor_serials)+1) if receptor_serials else 1" in source

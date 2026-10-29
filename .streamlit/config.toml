@@ -1,4 +1,4 @@
-# Keep PanViz controls readable and consistent with its publication workbench.
+# Keep PanLigra controls readable and consistent with its publication workbench.
 # The embedded scientific SVG/editor styles are maintained separately.
 [theme]
 base = "light"
