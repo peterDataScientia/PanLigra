@@ -1,0 +1,104 @@
+/* PanLigra — luminous scientific workbench. Scoped to Streamlit chrome only.
+   Never target the scientific SVG, PLIP annotations, or embedded editor iframe. */
+:root{
+ --pl-navy:#102a43;--pl-blue:#1769e0;--pl-blue-dark:#114fb2;
+ --pl-cyan:#06b6d4;--pl-ink:#17324d;--pl-muted:#536b83;
+ --pl-border:#d6e4f1;--pl-bg:#f4f8fd;--pl-surface:#fff;
+}
+[data-testid="stAppViewContainer"]{
+ background:linear-gradient(160deg,#eff6ff 0%,#f7faff 38%,#ffffff 82%)!important;
+ color:var(--pl-ink);
+}
+[data-testid="stAppViewContainer"] .block-container{
+ max-width:1780px;padding-top:1.15rem;padding-bottom:2.5rem;
+}
+[data-testid="stSidebar"]{
+ background:linear-gradient(180deg,#edf5ff 0%,#f8fbff 58%,#fff 100%)!important;
+ border-right:1px solid #d5e4f4!important;
+}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"]{gap:.75rem}
+[data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3{
+ color:#123b67!important;letter-spacing:-.025em;
+}
+.panligra-shell{
+ position:relative;background:linear-gradient(115deg,#102a43 0%,#164879 59%,#1769e0 100%)!important;
+ border:1px solid rgba(24,107,204,.42)!important;
+ border-radius:20px!important;padding:18px 23px!important;
+ box-shadow:0 14px 34px rgba(16,42,67,.18),0 3px 8px rgba(21,97,196,.09)!important;
+ margin-bottom:17px!important;overflow:hidden!important;
+}
+.panligra-shell:after{
+ content:"";position:absolute;right:-55px;top:-105px;width:350px;height:260px;
+ border-radius:50%;background:radial-gradient(circle,rgba(58,213,244,.27),transparent 67%);
+ pointer-events:none;
+}
+.panligra-shell .panligra-brand{position:relative;z-index:1;min-height:53px;gap:14px}
+.panligra-shell .pv-brand-logo{
+ width:48px;height:48px;flex-basis:48px;object-fit:contain;
+ border-radius:13px;background:rgba(255,255,255,.96);padding:5px;
+ box-shadow:0 4px 18px rgba(0,0,0,.12);
+}
+.panligra-shell .panligra-title{
+ font-size:2rem!important;line-height:1.35!important;min-height:52px;
+ color:#fff!important;letter-spacing:-.045em!important;font-weight:850!important;
+}
+.panligra-shell .pv-wordmark{color:#fff!important}
+.panligra-shell .pv-version{
+ color:#d5f5ff!important;background:rgba(255,255,255,.13);
+ border:1px solid rgba(255,255,255,.22);padding:2px 9px;
+ border-radius:999px;font-size:12px;
+}
+.panligra-subtitle{color:#44617e!important}
+.pv-kicker{color:#1769e0!important}
+.panligra-section{
+ background:var(--pl-surface)!important;border:1px solid var(--pl-border)!important;
+ border-radius:16px!important;box-shadow:0 5px 18px rgba(20,63,107,.065)!important;
+ padding:16px 18px!important;
+}
+.panligra-section h4,.pdbqt-card-title{color:#153f6a!important}
+.panligra-badge{
+ background:#e9f3ff!important;border:1px solid #d2e5fc!important;
+ color:#164a84!important;
+}
+[data-testid="stFileUploader"]{
+ border:1.5px dashed #9cc6ef!important;border-radius:14px!important;
+ background:#f6fbff!important;
+}
+[data-testid="stFileUploaderDropzone"]{background:transparent!important}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-primary"]{
+ background:linear-gradient(120deg,#1769e0,#0f56c4)!important;
+ border:1px solid #1159c5!important;border-radius:11px!important;color:white!important;
+ box-shadow:0 5px 14px rgba(23,105,224,.18)!important;
+ transition:transform .14s ease,box-shadow .14s ease,filter .14s ease;
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-primary"]:hover{
+ background:linear-gradient(120deg,#1158c7,#0b439d)!important;
+ box-shadow:0 8px 18px rgba(23,105,224,.24)!important;transform:translateY(-1px);
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-secondary"]{
+ background:#fff!important;border:1px solid #b8d0ea!important;
+ border-radius:11px!important;color:#174a81!important;
+ box-shadow:0 2px 5px rgba(23,59,98,.035);
+}
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-secondary"]:hover{
+ background:#eaf4ff!important;border-color:#6ba8e7!important;
+}
+[data-testid="stAppViewContainer"] :is(input,textarea,[data-baseweb="select"]){
+ border-radius:9px;
+}
+[data-testid="stAppViewContainer"] :is(input,textarea):focus-visible{
+ outline:2px solid #2a8bde!important;outline-offset:1px;
+}
+[data-testid="stAppViewContainer"] [data-testid="stExpander"]{
+ border:1px solid #d9e6f3!important;border-radius:13px!important;
+ background:rgba(255,255,255,.88)!important;
+}
+[data-testid="stAppViewContainer"] hr{border-color:#d9e6f2!important}
+@media(max-width:900px){
+ .panligra-shell{padding:14px 15px!important;border-radius:15px!important}
+ .panligra-shell .panligra-title{font-size:1.55rem!important}
+ .panligra-shell .pv-brand-logo{width:40px;height:40px;flex-basis:40px}
+}
+@media(prefers-reduced-motion:reduce){
+ [data-testid="stAppViewContainer"] button{transition:none!important;transform:none!important}
+}
