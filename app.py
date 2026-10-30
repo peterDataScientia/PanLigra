@@ -216,6 +216,10 @@ div[data-testid="stFileUploader"]{border:1px dashed #b8c8de;border-radius:14px;b
 </style>
 """, unsafe_allow_html=True)
 print("APPCHK 11 — main CSS markdown OK", flush=True)
+# Apply the application-only visual theme after legacy styles; leave editor.html untouched.
+UI_THEME_PATH = Path(__file__).resolve().parent / "assets" / "panligra_ui.css"
+st.markdown("<style>\n" + UI_THEME_PATH.read_text(encoding="utf-8") + "\n</style>", unsafe_allow_html=True)
+
 print("APPCHK 12 — before PanLigra header markdown", flush=True)
 st.markdown(f"""<div class="panligra-shell"><div class="panligra-brand"><img class="pv-brand-logo" src="data:image/png;base64,{LOGO_BASE64}" alt="PanLigra logo"><div class="panligra-title"><span class="pv-wordmark">PanLigra</span><span class="pv-version">v{PANLIGRA_VERSION}</span></div></div></div>""", unsafe_allow_html=True)
 print("APPCHK 13 — PanLigra header markdown OK", flush=True)
