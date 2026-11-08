@@ -12,4 +12,4 @@ def get_version() -> str:
 
 PANLIGRA_VERSION = get_version()
 
-PANLIGRA_RENDERER_REVISION = "2026.10.01-eight-class"
+PANLIGRA_RENDERER_REVISION = "2026.11.08-centdist-charge-labels"
