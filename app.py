@@ -712,6 +712,12 @@ def structures_page():
                 "Upload receptor PDB / PDBQT", type=["pdb", "pdbqt"],
                 key="pdbqt_receptor_upload",
             )
+            ligand_formal_charge=st.number_input(
+                "Docked ligand total formal charge", min_value=-8, max_value=8,
+                value=0, step=1,
+                help="Use the formal charge from ligand preparation (e.g. +2 for diprotonated brigatinib). PDBQT partial charges cannot establish this automatically.",
+                key="pdbqt_ligand_formal_charge",
+            )
             ligand_upload=st.file_uploader(
                 "Upload ligand or Vina PDBQT", type=["pdbqt"],
                 help="Supports multiple poses.",
@@ -757,6 +763,7 @@ def structures_page():
         "mode": input_mode,
         "source_hashes": [_sha256_bytes(x[1]) for x in source_payloads],
         "pose": pose_index,
+        "ligand_formal_charge": int(ligand_formal_charge) if input_mode == "Docking PDBQT" else None,
         "site": selected_site,
         "width": int(out_width),
         "height": int(out_height),
@@ -775,6 +782,7 @@ def structures_page():
                     canvas_height=int(out_height),
                     canvas_width=int(out_width),
                     output_dir=str(results_root),
+                    ligand_formal_charge=int(ligand_formal_charge) if input_mode == "Docking PDBQT" else None,
                 )
                 site_dir=Path(analysis_obj["binding_site_dir"])
                 interaction_dir=Path(analysis_obj["interactions_dir"])
@@ -791,6 +799,7 @@ def structures_page():
                     height=int(out_height),
                     base_svg=None,
                     analysis=analysis_obj,
+                    ligand_formal_charge=int(ligand_formal_charge) if input_mode == "Docking PDBQT" else None,
                 )
                 figure_df=build_figure_records(scene)
                 (site_dir/"PanLigra_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
@@ -807,6 +816,7 @@ def structures_page():
                     "figure_height": int(out_height),
                     "pose_index": pose_index,
                     "pose_score": pose_score,
+                    "ligand_formal_charge": int(ligand_formal_charge) if input_mode == "Docking PDBQT" else None,
                     "binding_site_count": len(binding_sites),
                     "interaction_df": figure_df,
                     "figure_interaction_df": figure_df,
