@@ -237,7 +237,12 @@ def _get_interactions(
             else:
                 current_centroid = centroid_name
 
-            distance = _distance_from_row(row, "DIST", "distance", "dist")
+            # PLIP pi-stacking reports the aromatic ring centroid distance as CENTDIST.
+            # Other interaction families may use DIST instead.
+            if int_type == "PS":
+                distance = _distance_from_row(row, "CENTDIST", "cent_dist", "CENT_DIST", "DIST", "distance", "dist")
+            else:
+                distance = _distance_from_row(row, "DIST", "distance", "dist")
             interactions.append((
                 current_centroid,
                 row["RESTYPE"] + str(row["RESNR"]) + "_" + row["RESCHAIN"],
@@ -821,17 +826,17 @@ def _draw_mol(atom_info, connections, padding, canvas_height, canvas_width, out_
 
         # Small white knockout around heteroatom labels.
         ctx.set_source_rgba(1, 1, 1, 0.95)
-        ctx.arc(sx, sy, 8.5, 0, 2 * math.pi)
+        ctx.arc(sx, sy, 10.0 if res == "Charge" else 8.5, 0, 2 * math.pi)
         ctx.fill()
 
-        bold = label in {"O", "N", "S", "P", "B"}
+        bold = label in {"O", "N", "S", "P", "B"} or res == "Charge"
 
         ctx.select_font_face(
             "Sans",
             cairo.FONT_SLANT_NORMAL,
             cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL
         )
-        ctx.set_font_size(atom_font_size)
+        ctx.set_font_size(atom_font_size if res != "Charge" else max(atom_font_size, int(base * 0.023)))
 
         text = label
         ext = ctx.text_extents(text)
