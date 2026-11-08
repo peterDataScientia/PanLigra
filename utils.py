@@ -980,7 +980,7 @@ hbkeys = [
 
 def plip_2d_interactions(file, bsid, padding=35, canvas_height=700, canvas_width=1000,
                          save_files=True, save_pymol=True, out_name="PanLigra_interactions.png",
-                         output_dir=None, analysis=None):
+                         output_dir=None, analysis=None, ligand_formal_charge=None):
     """Run PLIP analysis for one binding site and render a PanLigra interaction diagram.
 
     Parameters
@@ -1108,14 +1108,18 @@ def plip_2d_interactions(file, bsid, padding=35, canvas_height=700, canvas_width
 
         try:
             mol = Chem.MolFromPDBBlock(lig, removeHs=False)
-            rdDetermineBonds.DetermineBonds(mol, charge=0)
+            rdDetermineBonds.DetermineBonds(mol, charge=int(ligand_formal_charge) if ligand_formal_charge is not None else 0)
         except:
             mol = pybel.readstring("pdb",lig)
             mol.write("pdb",lig_path, overwrite=True)
             mol = Chem.MolFromPDBFile(lig_path, removeHs=False)
 
     AllChem.EmbedMolecule(mol)
-    set_to_neutral_pH(mol) #### Helper function to protonate/deprotonate groups. ####
+    # Preserve the explicitly selected docked microstate; PDBQT partial charges are not formal charges.
+    if ligand_formal_charge is None:
+        set_to_neutral_pH(mol)
+    elif Chem.GetFormalCharge(mol) != int(ligand_formal_charge):
+        raise ValueError("Ligand charge reconstruction failed: selected formal charge does not match the reconstructed molecule.")
 
     for atom in mol.GetAtoms():
         if atom.GetAtomicNum() == 1:
