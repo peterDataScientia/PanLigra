@@ -234,7 +234,7 @@
   <div id="pv-stage">
     <div id="pv-sync-grid">
       <svg id="pv-svg-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
-      <section id="pv-3d-panel"><div id="pv-3d-head"><strong>3D complex ↔ 2D interactions</strong><button type="button" id="pv-3d-reset">Pocket view</button><button type="button" id="pv-3d-protein">Protein: ribbon</button><button type="button" id="pv-3d-export">Export PNG</button><label><input type="checkbox" id="pv-3d-distances" checked> Å labels</label><label><input type="checkbox" id="pv-3d-hpi"> Hydrophobic</label><label><input type="checkbox" id="pv-3d-hb" checked> H-bonds</label><label><input type="checkbox" id="pv-3d-sb" checked> Salt bridges</label><label><input type="checkbox" id="pv-3d-ps" checked> π-stacking</label><label><input type="checkbox" id="pv-3d-pc" checked> π-cation</label><label><input type="checkbox" id="pv-3d-xb" checked> Halogen</label><span id="pv-3d-selected">No residue selected</span></div><div id="pv-3d-viewer"></div><div id="pv-3d-message">Select a residue or PLIP interaction in either panel.</div></section>
+      <section id="pv-3d-panel"><div id="pv-3d-head"><strong>3D complex ↔ 2D interactions</strong> <small id="pv-3d-build" style="color:#64748b;font-weight:500">build 20261108-3d-api-v3</small><button type="button" id="pv-3d-reset">Pocket view</button><button type="button" id="pv-3d-protein">Protein: ribbon</button><button type="button" id="pv-3d-export">Export PNG</button><label><input type="checkbox" id="pv-3d-distances" checked> Å labels</label><label><input type="checkbox" id="pv-3d-hpi"> Hydrophobic</label><label><input type="checkbox" id="pv-3d-hb" checked> H-bonds</label><label><input type="checkbox" id="pv-3d-sb" checked> Salt bridges</label><label><input type="checkbox" id="pv-3d-ps" checked> π-stacking</label><label><input type="checkbox" id="pv-3d-pc" checked> π-cation</label><label><input type="checkbox" id="pv-3d-xb" checked> Halogen</label><span id="pv-3d-selected">No residue selected</span></div><div id="pv-3d-viewer"></div><div id="pv-3d-message">Select a residue or PLIP interaction in either panel.</div></section>
     </div>
     
     <div id="pv-edit-pop"><input id="pv-edit-input" type="text"><button id="pv-edit-apply">Apply</button></div>
@@ -447,15 +447,15 @@ function draw3DInteractionLines(){
 function style3D(source){
   if(!viewer3D||!model3D)return;
   model3D.setStyle({},{});
-  if(protein3DVisible)viewer3D.addStyle({hetflag:false},{cartoon:{color:'#c8d2e2',opacity:.5}});
+  if(protein3DVisible)model3D.setStyle({hetflag:false},{cartoon:{color:'#c8d2e2',opacity:.5}},true);
   const ligandSel=ligand3DSelector();
-  viewer3D.addStyle(ligandSel,{stick:{colorscheme:'Jmol',radius:.24}});
+  model3D.setStyle(ligandSel,{stick:{colorscheme:'Jmol',radius:.24}},true);
   for(const lab of state.labels||[]){
     const x=residueFromSource(lab.sourceResidue);
-    if(x)viewer3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.13}});
+    if(x)model3D.setStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.13}},true);
   }
   const sel=residueFromSource(source);
-  if(sel)viewer3D.addStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#d12d80',radius:.25}});
+  if(sel)model3D.setStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#d12d80',radius:.25}},true);
   draw3DInteractionLines();
   viewer3D.render();
 }
