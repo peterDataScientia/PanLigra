@@ -443,7 +443,7 @@ function molecule(){
     const formalCharge=Number(a.formalCharge||0);
     if(formalCharge){
       const mark=(Math.abs(formalCharge)===1?'':String(Math.abs(formalCharge)))+(formalCharge>0?'+':'−');
-      const ct=el('text',{x:a.x+fs*.57,y:a.y-fs*.36,'text-anchor':'start','font-family':'Arial,Helvetica,sans-serif','font-size':Math.max(12,fs*.75),'font-weight':700,fill:'#000000'});
+      const ct=el('text',{x:a.x+fs*.60,y:a.y-fs*.42,'text-anchor':'start','font-family':'Arial,Helvetica,sans-serif','font-size':fs,'font-weight':800,fill:'#000000',stroke:'#ffffff','stroke-width':2,'paint-order':'stroke fill'});
       ct.textContent=mark;g.appendChild(ct);
     }
   }
