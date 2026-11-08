@@ -30,6 +30,7 @@ print("APPCHK 05 — PLIP PDBComplex import OK", flush=True)
 from utils import plip_2d_interactions
 print("APPCHK 06 — utils import OK", flush=True)
 from interactive_engine import build_editor_scene
+from interaction_3d import build_3d_interaction_segments
 from scientific_records import build_scientific_records, build_figure_records, write_scientific_exports
 from panligra_version import PANLIGRA_VERSION, PANLIGRA_RENDERER_REVISION
 import rcsb_pdb
@@ -827,6 +828,7 @@ def structures_page():
                 # The 3D viewer receives the exact PLIP-prepared complex coordinates.
                 # Keep source coordinates read-only; the 2D/3D link selects residues only.
                 scene["threeDStructure"] = Path(analysis_obj["file_prot"]).read_text(encoding="utf-8", errors="replace")
+                scene["threeDInteractions"] = build_3d_interaction_segments(analysis_obj["my_interactions"], scene)
                 figure_df=build_figure_records(scene)
                 (site_dir/"PanLigra_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
                 result={
