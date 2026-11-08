@@ -234,7 +234,7 @@
   <div id="pv-stage">
     <div id="pv-sync-grid">
       <svg id="pv-svg-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
-      <section id="pv-3d-panel"><div id="pv-3d-head"><strong>3D complex ↔ 2D interactions</strong><button type="button" id="pv-3d-reset">Reset view</button><span id="pv-3d-selected">No residue selected</span></div><div id="pv-3d-viewer"></div><div id="pv-3d-message">Select a residue or PLIP interaction in either panel.</div></section>
+      <section id="pv-3d-panel"><div id="pv-3d-head"><strong>3D complex ↔ 2D interactions</strong><button type="button" id="pv-3d-reset">Pocket view</button><button type="button" id="pv-3d-protein">Protein: ribbon</button><button type="button" id="pv-3d-export">Export PNG</button><span id="pv-3d-selected">No residue selected</span></div><div id="pv-3d-viewer"></div><div id="pv-3d-message">Select a residue or PLIP interaction in either panel.</div></section>
     </div>
     
     <div id="pv-edit-pop"><input id="pv-edit-input" type="text"><button id="pv-edit-apply">Apply</button></div>
@@ -263,7 +263,7 @@
 const initial=__PANLIGRA_SCENE__;
 const original3DPdb=String(initial.threeDStructure||'');
 delete initial.threeDStructure;
-let viewer3D=null,model3D=null;
+let viewer3D=null,model3D=null,protein3DVisible=true;
 const clone=x=>JSON.parse(JSON.stringify(x));
 const NS='http://www.w3.org/2000/svg';
 const svg=document.getElementById('pv-svg-canvas');
@@ -403,20 +403,39 @@ function sync3DFrom2D(type,id){
   const obj=type==='label'?(state.labels||[]).find(o=>String(o.id)===String(id)):(state.interactions||[]).find(o=>String(o.id)===String(id));
   if(obj)focus3DResidue(obj.sourceResidue||(state.labels||[]).find(o=>o.id===obj.residueId)?.sourceResidue);
 }
-function focus3DResidue(source,from3D=false){
+function ligand3DSelector(){
+  const ligand=(original3DPdb.split(/\r?\n/).find(line=>line.startsWith('HETATM') && line.slice(17,20).trim()==='LIG'));
+  if(!ligand)return {hetflag:true};
+  return {chain:ligand.slice(21,22).trim(),resi:Number(ligand.slice(22,26).trim()),resn:'LIG'};
+}
+function pocket3D(){
   if(!viewer3D||!model3D)return;
-  const sel=residueFromSource(source);
-  if(!sel)return;
-  model3D.setStyle({},{cartoon:{color:'#bacbdb',opacity:.8}});
-  model3D.setStyle({hetflag:true},{stick:{colorscheme:'Jmol',radius:.19}});
+  viewer3D.zoomTo(ligand3DSelector());
+  viewer3D.zoom(0.85);
+  viewer3D.render();
+}
+function style3D(source){
+  if(!viewer3D||!model3D)return;
+  model3D.setStyle({},{});
+  if(protein3DVisible)model3D.addStyle({hetflag:false},{cartoon:{color:'#c8d2e2',opacity:0.5}});
+  const ligandSel=ligand3DSelector();
+  model3D.addStyle(ligandSel,{stick:{colorscheme:'Jmol',radius:.24}});
   for(const lab of state.labels||[]){
     const x=residueFromSource(lab.sourceResidue);
-    if(x)viewer3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.14}});
+    if(x)model3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.13}});
   }
-  model3D.setStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#ef3f85',radius:.28}});
-  if(!from3D)viewer3D.zoomTo({chain:sel.chain,resi:sel.resi,hetflag:false});
+  const sel=residueFromSource(source);
+  if(sel)model3D.addStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#d12d80',radius:.25}});
   viewer3D.render();
-  document.getElementById('pv-3d-selected').textContent=String(source).replace('_',':');
+}
+function focus3DResidue(source,from3D=false){
+  if(!viewer3D||!model3D)return;
+  const sel=residueFromSource(source);if(!sel)return;
+  style3D(source);
+  // Maintain the ligand context when an annotated residue is selected.
+  const proteinLabel=String(source).replace('_',':');
+  document.getElementById('pv-3d-selected').textContent='Selected: '+proteinLabel;
+  document.getElementById('pv-3d-message').textContent=proteinLabel+' highlighted. Protein geometry and PLIP interaction records are not altered by the 2D editor.';
   if(from3D){
     const lab=(state.labels||[]).find(o=>String(o.sourceResidue)===String(source));
     if(lab){selectedItems=[{type:'label',id:lab.id}];selected=selectedItems[0];renderSelection();showRibbon();}
@@ -425,26 +444,29 @@ function focus3DResidue(source,from3D=false){
 function initialize3D(){
   const message=document.getElementById('pv-3d-message');
   if(!original3DPdb){message.textContent='No complex coordinates were supplied.';return;}
-  if(!window.$3Dmol){message.textContent='3Dmol.js did not load; refresh with an internet connection.';return;}
+  if(!window.$3Dmol){message.textContent='3Dmol.js could not load; please check internet connectivity.';return;}
   try{
-    viewer3D=window.$3Dmol.createViewer(document.getElementById('pv-3d-viewer'),{backgroundColor:'white'});
+    viewer3D=window.$3Dmol.createViewer(document.getElementById('pv-3d-viewer'),{backgroundColor:'white',antialias:true});
     model3D=viewer3D.addModel(original3DPdb,'pdb');
-    model3D.setStyle({},{cartoon:{color:'#bacbdb',opacity:.8}});
-    model3D.setStyle({hetflag:true},{stick:{colorscheme:'Jmol',radius:.19}});
-    for(const lab of state.labels||[]){
-      const x=residueFromSource(lab.sourceResidue);
-      if(x)viewer3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.14}});
-    }
-    model3D.setClickable({},true,atom=>{
+    style3D(null);
+    model3D.setClickable({hetflag:false},true,atom=>{
       const source=String(atom.resn||'').toUpperCase()+String(atom.resi||'')+'_'+String(atom.chain||'');
       if((state.labels||[]).some(l=>String(l.sourceResidue)===source))focus3DResidue(source,true);
     });
-    viewer3D.zoomTo();viewer3D.render();viewer3D.resize();
-    message.textContent='Click an annotated residue in 3D or a residue/interaction in 2D. The source complex coordinates are unchanged.';
+    pocket3D();viewer3D.resize();
+    message.textContent='Pocket-centered view. Click a PLIP-annotated residue in 2D or 3D to highlight it in both panels.';
   }catch(e){message.textContent='3D initialization failed: '+e.message;}
 }
-document.getElementById('pv-3d-reset').addEventListener('click',()=>{
-  if(viewer3D){viewer3D.zoomTo();viewer3D.render();}
+document.getElementById('pv-3d-reset').addEventListener('click',()=>{if(viewer3D){style3D(null);pocket3D();document.getElementById('pv-3d-selected').textContent='Pocket view';}});
+document.getElementById('pv-3d-protein').addEventListener('click',()=>{
+  protein3DVisible=!protein3DVisible;style3D(null);
+  document.getElementById('pv-3d-protein').textContent='Protein: '+(protein3DVisible?'ribbon':'hidden');
+});
+document.getElementById('pv-3d-export').addEventListener('click',()=>{
+  if(!viewer3D)return;
+  viewer3D.render();
+  const uri=viewer3D.pngURI();
+  const link=document.createElement('a');link.href=uri;link.download='PanLigra_3D_complex.png';link.click();
 });
 function setSelectedRef(type,id,additive=false){
   const ref={type,id};
