@@ -305,6 +305,22 @@ def _find_obabel():
             return path
     return None
 
+def _pdbqt_pose_formal_charge(path, pose_index=0):
+    """Read total *formal* charge only from an explicitly provided PDBQT SMILES remark.
+
+    PDBQT ATOM charges are fractional force-field charges, not atom formal charges.
+    Missing or invalid SMILES must never be silently interpreted as charge zero.
+    """
+    blocks = _extract_pdbqt_models(path)
+    if not 0 <= pose_index < len(blocks):
+        return None
+    match = re.search(r"^REMARK\s+SMILES\s+([^\r\n]+)", blocks[pose_index], re.M | re.I)
+    if not match:
+        return None
+    molecule = Chem.MolFromSmiles(match.group(1).strip())
+    return int(Chem.GetFormalCharge(molecule)) if molecule is not None else None
+
+
 def _extract_pdbqt_models(path):
     text = Path(path).read_text(encoding="utf-8", errors="replace")
     blocks = re.findall(r"MODEL\s+\d+.*?ENDMDL", text, flags=re.S|re.I)
@@ -712,12 +728,6 @@ def structures_page():
                 "Upload receptor PDB / PDBQT", type=["pdb", "pdbqt"],
                 key="pdbqt_receptor_upload",
             )
-            ligand_formal_charge=st.number_input(
-                "Docked ligand total formal charge", min_value=-8, max_value=8,
-                value=0, step=1,
-                help="Use the formal charge from ligand preparation (e.g. +2 for diprotonated brigatinib). PDBQT partial charges cannot establish this automatically.",
-                key="pdbqt_ligand_formal_charge",
-            )
             ligand_upload=st.file_uploader(
                 "Upload ligand or Vina PDBQT", type=["pdbqt"],
                 help="Supports multiple poses.",
@@ -737,6 +747,19 @@ def structures_page():
                 return f"Pose {x}" + (f"  ·  Vina {score:.2f} kcal/mol" if score is not None else "")
             pose_index=st.selectbox("Docking pose",pose_options,format_func=_pose_label)-1
             pose_score=scores[pose_index] if pose_index < len(scores) else None
+            detected_charge=_pdbqt_pose_formal_charge(ligand_path, pose_index)
+            ligand_formal_charge=st.number_input(
+                "Docked ligand total formal charge", min_value=-8, max_value=8,
+                value=int(detected_charge) if detected_charge is not None else 0, step=1,
+                key=f"pdbqt_formal_charge_{_sha256_bytes(ligand_bytes)[:12]}_{pose_index}",
+                help="Defaults to the charge encoded in the PDBQT REMARK SMILES when present. Verify against the ligand preparation state. PDBQT fractional charges are not formal charges.",
+            )
+            if detected_charge is None:
+                st.warning("No valid REMARK SMILES was found in this PDBQT pose. Confirm the formal charge from ligand preparation; 0 is only the initial input value.")
+            elif int(ligand_formal_charge) != int(detected_charge):
+                st.warning(f"Selected charge ({int(ligand_formal_charge):+d}) differs from the PDBQT SMILES charge ({int(detected_charge):+d}). Confirm the intended ligand microstate.")
+            else:
+                st.caption(f"Ligand formal charge from PDBQT SMILES: {int(detected_charge):+d}")
             try:
                 pdb_path,nposes=_build_pdbqt_complex(receptor_path,ligand_path,work_root,pose_index=pose_index)
             except Exception as exc:
