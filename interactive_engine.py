@@ -120,7 +120,7 @@ def _prepare_interaction_tables(my_interactions):
     )
 
 
-def _extract_ligand_mol(file_prot, bsid):
+def _extract_ligand_mol(file_prot, bsid, ligand_formal_charge=None):
     with open(file_prot, "r", encoding="utf-8") as handle:
         pdb_lines = [line for line in handle.readlines() if line.startswith(("ATOM", "HETATM"))]
     parts = bsid.split(":")
@@ -137,7 +137,7 @@ def _extract_ligand_mol(file_prot, bsid):
             mol = Chem.MolFromPDBBlock(lig, removeHs=False)
             if mol is None:
                 raise ValueError("RDKit could not read ligand PDB block")
-            rdDetermineBonds.DetermineBonds(mol, charge=0)
+            rdDetermineBonds.DetermineBonds(mol, charge=int(ligand_formal_charge) if ligand_formal_charge is not None else 0)
         except Exception:
             py_mol = pybel.readstring("pdb", lig)
             py_mol.write("pdb", lig_path, overwrite=True)
@@ -145,7 +145,10 @@ def _extract_ligand_mol(file_prot, bsid):
     if mol is None:
         raise ValueError("Unable to construct ligand molecule from the PDB complex.")
     AllChem.EmbedMolecule(mol)
-    set_to_neutral_pH(mol)
+    if ligand_formal_charge is None:
+        set_to_neutral_pH(mol)
+    elif Chem.GetFormalCharge(mol) != int(ligand_formal_charge):
+        raise ValueError("Ligand charge reconstruction failed: selected charge does not match atom formal charges.")
     for atom in mol.GetAtoms():
         if atom.GetAtomicNum() == 1 and atom.GetBonds():
             bound_atom = atom.GetBonds()[0].GetOtherAtom(atom)
@@ -385,7 +388,7 @@ def _exact_panligra_layout(data_points, connections, canvas_width, canvas_height
     }
 
 
-def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, analysis=None):
+def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, analysis=None, ligand_formal_charge=None):
     """Create the v5 scene.
 
     v5 deliberately does NOT edit or transform the original annotation nodes.
@@ -422,7 +425,7 @@ def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, an
             raise RuntimeError(f"Binding site {bsid} was not found after PLIP analysis.")
         my_interactions = my_mol.interaction_sets[bsid]
         hpi, hb, ps, pc, sb, wb, xb, mc = _prepare_interaction_tables(my_interactions)
-    mol = _extract_ligand_mol(file_prot, bsid)
+    mol = _extract_ligand_mol(file_prot, bsid, ligand_formal_charge=ligand_formal_charge)
 
     raw_atoms, bonds = [], []
     for atom in mol.GetAtoms():
@@ -475,9 +478,10 @@ def build_editor_scene(pdb_file, bsid, width=1200, height=850, base_svg=None, an
             "id": i,
             "name": name,
             "element": symbol,
+            "formalCharge": int(mol.GetAtomWithIdx(i).GetFormalCharge()),
             "x": float(px),
             "y": float(py),
-            "showLabel": symbol != "C",
+            "showLabel": symbol != "C" or mol.GetAtomWithIdx(i).GetFormalCharge() != 0,
         })
 
     residues = []
