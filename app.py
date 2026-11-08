@@ -824,6 +824,9 @@ def structures_page():
                     analysis=analysis_obj,
                     ligand_formal_charge=int(ligand_formal_charge) if input_mode == "Docking PDBQT" else None,
                 )
+                # The 3D viewer receives the exact PLIP-prepared complex coordinates.
+                # Keep source coordinates read-only; the 2D/3D link selects residues only.
+                scene["threeDStructure"] = Path(analysis_obj["file_prot"]).read_text(encoding="utf-8", errors="replace")
                 figure_df=build_figure_records(scene)
                 (site_dir/"PanLigra_initial_layout.json").write_text(json.dumps(scene,indent=2,ensure_ascii=False),encoding="utf-8")
                 result={
