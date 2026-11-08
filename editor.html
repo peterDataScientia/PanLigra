@@ -417,15 +417,15 @@ function pocket3D(){
 function style3D(source){
   if(!viewer3D||!model3D)return;
   model3D.setStyle({},{});
-  if(protein3DVisible)model3D.addStyle({hetflag:false},{cartoon:{color:'#c8d2e2',opacity:0.5}});
+  if(protein3DVisible)viewer3D.addStyle({hetflag:false},{cartoon:{color:'#c8d2e2',opacity:0.5}});
   const ligandSel=ligand3DSelector();
-  model3D.addStyle(ligandSel,{stick:{colorscheme:'Jmol',radius:.24}});
+  viewer3D.addStyle(ligandSel,{stick:{colorscheme:'Jmol',radius:.24}});
   for(const lab of state.labels||[]){
     const x=residueFromSource(lab.sourceResidue);
-    if(x)model3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.13}});
+    if(x)viewer3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.13}});
   }
   const sel=residueFromSource(source);
-  if(sel)model3D.addStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#d12d80',radius:.25}});
+  if(sel)viewer3D.addStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#d12d80',radius:.25}});
   viewer3D.render();
 }
 function focus3DResidue(source,from3D=false){
