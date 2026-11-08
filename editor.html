@@ -234,7 +234,7 @@
   <div id="pv-stage">
     <div id="pv-sync-grid">
       <svg id="pv-svg-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
-      <section id="pv-3d-panel"><div id="pv-3d-head"><strong>3D complex ↔ 2D interactions</strong><button type="button" id="pv-3d-reset">Pocket view</button><button type="button" id="pv-3d-protein">Protein: ribbon</button><button type="button" id="pv-3d-export">Export PNG</button><label><input type="checkbox" id="pv-3d-distances" checked> Å labels</label><label><input type="checkbox" id="pv-3d-hpi"> Hydrophobic</label><span id="pv-3d-selected">No residue selected</span></div><div id="pv-3d-viewer"></div><div id="pv-3d-message">Select a residue or PLIP interaction in either panel.</div></section>
+      <section id="pv-3d-panel"><div id="pv-3d-head"><strong>3D complex ↔ 2D interactions</strong><button type="button" id="pv-3d-reset">Pocket view</button><button type="button" id="pv-3d-protein">Protein: ribbon</button><button type="button" id="pv-3d-export">Export PNG</button><label><input type="checkbox" id="pv-3d-distances" checked> Å labels</label><label><input type="checkbox" id="pv-3d-hpi"> Hydrophobic</label><label><input type="checkbox" id="pv-3d-hb" checked> H-bonds</label><label><input type="checkbox" id="pv-3d-sb" checked> Salt bridges</label><label><input type="checkbox" id="pv-3d-ps" checked> π-stacking</label><label><input type="checkbox" id="pv-3d-pc" checked> π-cation</label><label><input type="checkbox" id="pv-3d-xb" checked> Halogen</label><span id="pv-3d-selected">No residue selected</span></div><div id="pv-3d-viewer"></div><div id="pv-3d-message">Select a residue or PLIP interaction in either panel.</div></section>
     </div>
     
     <div id="pv-edit-pop"><input id="pv-edit-input" type="text"><button id="pv-edit-apply">Apply</button></div>
@@ -425,6 +425,8 @@ function draw3DInteractionLines(){
   const showHydrophobic=document.getElementById('pv-3d-hpi').checked;
   for(const it of original3DInteractions){
     if(!showHydrophobic && it.type==='HPI')continue;
+    const switchId={HB:'pv-3d-hb',SB:'pv-3d-sb',PS:'pv-3d-ps',PC:'pv-3d-pc',XB:'pv-3d-xb'}[it.type];
+    if(switchId && !document.getElementById(switchId).checked)continue;
     const selected=selected3DInteractionId===it.id;
     const color=interaction3DColors[it.type]||'#656565';
     const start={x:Number(it.start[0]),y:Number(it.start[1]),z:Number(it.start[2])};
@@ -488,7 +490,7 @@ function initialize3D(){
   }catch(e){message.textContent='3D initialization failed: '+e.message;}
 }
 document.getElementById('pv-3d-reset').addEventListener('click',()=>{if(viewer3D){selected3DInteractionId=null;style3D(null);pocket3D();document.getElementById('pv-3d-selected').textContent='Pocket view';}});
-for(const key of ['pv-3d-distances','pv-3d-hpi'])document.getElementById(key).addEventListener('change',()=>{draw3DInteractionLines();if(viewer3D)viewer3D.render();});
+for(const key of ['pv-3d-distances','pv-3d-hpi','pv-3d-hb','pv-3d-sb','pv-3d-ps','pv-3d-pc','pv-3d-xb'])document.getElementById(key).addEventListener('change',()=>{draw3DInteractionLines();if(viewer3D)viewer3D.render();});
 document.getElementById('pv-3d-protein').addEventListener('click',()=>{
   protein3DVisible=!protein3DVisible;style3D(null);
   document.getElementById('pv-3d-protein').textContent='Protein: '+(protein3DVisible?'ribbon':'hidden');
