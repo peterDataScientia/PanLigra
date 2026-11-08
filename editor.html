@@ -435,11 +435,17 @@ function molecule(){
     else{const off=Math.max(4.2,bondWidth*3.0);for(const o of[-off,0,off])mk(a.x+nx*o,a.y+ny*o,c.x+nx*o,c.y+ny*o,lineWidthForBond(3));}
   }
   for(const a of (state.atoms||[])){
-    if(!a.showLabel)continue;
+    if(!a.showLabel && !Number(a.formalCharge||0))continue;
     const fs=atomLabelSize;const elementColor=a.element==='O'?'#D90000':a.element==='N'?'#0000CC':a.element==='S'?'#B78A00':a.element==='P'?'#D96600':a.element==='B'?'#E57373':'#000';
     const color=ligandMode==='follow'?bondColor:elementColor;
     g.appendChild(el('circle',{cx:a.x,cy:a.y,r:8.5,fill:'#fff',opacity:'.95'}));
     const t=el('text',{x:a.x,y:a.y+fs*.34,'text-anchor':'middle','font-family':'Arial,Helvetica,sans-serif','font-size':fs,'font-weight':atomLabelWeight,fill:color});t.textContent=a.element;g.appendChild(t);
+    const formalCharge=Number(a.formalCharge||0);
+    if(formalCharge){
+      const mark=(Math.abs(formalCharge)===1?'':String(Math.abs(formalCharge)))+(formalCharge>0?'+':'−');
+      const ct=el('text',{x:a.x+fs*.57,y:a.y-fs*.36,'text-anchor':'start','font-family':'Arial,Helvetica,sans-serif','font-size':Math.max(12,fs*.75),'font-weight':700,fill:'#000000'});
+      ct.textContent=mark;g.appendChild(ct);
+    }
   }
 }
 function moleculeCopyLayer(){
