@@ -411,7 +411,7 @@ function focus3DResidue(source,from3D=false){
   model3D.setStyle({hetflag:true},{stick:{colorscheme:'Jmol',radius:.19}});
   for(const lab of state.labels||[]){
     const x=residueFromSource(lab.sourceResidue);
-    if(x)model3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.14}});
+    if(x)viewer3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.14}});
   }
   model3D.setStyle({chain:sel.chain,resi:sel.resi,hetflag:false},{stick:{color:'#ef3f85',radius:.28}});
   if(!from3D)viewer3D.zoomTo({chain:sel.chain,resi:sel.resi,hetflag:false});
@@ -433,7 +433,7 @@ function initialize3D(){
     model3D.setStyle({hetflag:true},{stick:{colorscheme:'Jmol',radius:.19}});
     for(const lab of state.labels||[]){
       const x=residueFromSource(lab.sourceResidue);
-      if(x)model3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.14}});
+      if(x)viewer3D.addStyle({chain:x.chain,resi:x.resi,hetflag:false},{stick:{colorscheme:'Jmol',radius:.14}});
     }
     model3D.setClickable({},true,atom=>{
       const source=String(atom.resn||'').toUpperCase()+String(atom.resi||'')+'_'+String(atom.chain||'');
