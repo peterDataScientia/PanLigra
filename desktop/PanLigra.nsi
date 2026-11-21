@@ -16,7 +16,7 @@ ShowUninstDetails show
 !insertmacro MUI_LANGUAGE "English"
 Section "PanLigra" SEC01
   SetOutPath "$INSTDIR"
-  File /r "..\\dist\\PanLigra\\*"
+  File /r "dist\\PanLigra\\*"
   CreateDirectory "$SMPROGRAMS\\PanLigra"
   CreateShortcut "$SMPROGRAMS\\PanLigra\\PanLigra.lnk" "$INSTDIR\\PanLigra.exe"
   CreateShortcut "$DESKTOP\\PanLigra.lnk" "$INSTDIR\\PanLigra.exe"
