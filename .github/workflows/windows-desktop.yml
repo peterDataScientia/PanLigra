@@ -31,7 +31,8 @@ jobs:
             python=3.11
             pip
             openbabel=3.2.1
-            rdkit
+            rdkit>=2025.09,<2026
+            libblas=*=*openblas
             pycairo
             gemmi
             numpy
@@ -57,6 +58,10 @@ jobs:
           micromamba run -n panligra-build python -m compileall -q app.py utils.py interactive_engine.py interaction_3d.py scientific_records.py rcsb_pdb.py desktop
           micromamba run -n panligra-build pyinstaller --noconfirm --clean desktop/PanLigra.spec
           if (!(Test-Path "dist/PanLigra/PanLigra.exe")) { throw "Executable missing" }
+          $files = Get-ChildItem "dist/PanLigra" -File -Recurse
+          Write-Host "Largest frozen application files:"
+          $files | Sort-Object Length -Descending | Select-Object -First 30 @{N="MB";E={[math]::Round($_.Length / 1MB, 1)}},FullName | Format-Table -AutoSize
+          Write-Host ("Total frozen folder: {0:N1} MB" -f (($files | Measure-Object Length -Sum).Sum / 1MB))
 
       - name: Windows launch smoke test
         shell: pwsh
