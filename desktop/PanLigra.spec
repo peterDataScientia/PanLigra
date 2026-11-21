@@ -5,7 +5,10 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 root = Path(SPECPATH).resolve().parent
 datas = []
 binaries = []
-hiddenimports = []
+hiddenimports = [
+    "utils", "interactive_engine", "interaction_3d",
+    "scientific_records", "rcsb_pdb", "panligra_version",
+]
 
 for package in ("streamlit", "plip", "openbabel", "rdkit", "cairo", "gemmi"):
     pkg_datas, pkg_bins, pkg_hidden = collect_all(package)
