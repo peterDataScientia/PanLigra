@@ -32,9 +32,9 @@ a = Analysis(
     datas=datas,
     hiddenimports=hiddenimports + collect_submodules("streamlit"),
     hookspath=[],
-    hooksconfig={},
+    hooksconfig={"matplotlib": {"backends": ["Agg"]}},
     runtime_hooks=[],
-    excludes=["pytest", "tkinter"],
+    excludes=["pytest", "tkinter", "PySide6", "PyQt6", "PyQt5", "PySide2", "shiboken6"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
