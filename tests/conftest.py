@@ -1,4 +1,7 @@
 import sys
+
+# RDKit must be loaded before PLIP/Open Babel on Linux to avoid native-library collisions.
+from rdkit import Chem  # noqa: F401
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
