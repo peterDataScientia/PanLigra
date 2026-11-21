@@ -30,12 +30,16 @@ def open_when_ready(port: int) -> None:
 def main() -> None:
     root = bundle_root()
     os.chdir(root)
-    os.environ.setdefault("STREAMLIT_BROWSER_GATHER_USAGE_STATS", "false")
-    os.environ.setdefault("STREAMLIT_SERVER_HEADLESS", "true")
-    os.environ.setdefault("STREAMLIT_SERVER_ADDRESS", "127.0.0.1")
-    os.environ.setdefault("STREAMLIT_SERVER_PORT", str(PORT))
+    os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
+    os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
+    os.environ["STREAMLIT_SERVER_ADDRESS"] = "127.0.0.1"
+    os.environ["STREAMLIT_SERVER_PORT"] = str(PORT)
 
+    from streamlit import config as st_config
     from streamlit.web import bootstrap
+
+    st_config.set_option("server.port", PORT)
+    st_config.set_option("server.address", "127.0.0.1")
 
     threading.Thread(target=open_when_ready, args=(PORT,), daemon=True).start()
     bootstrap.run(
