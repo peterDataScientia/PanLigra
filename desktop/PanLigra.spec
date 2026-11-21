@@ -2,7 +2,7 @@
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_all, collect_submodules
 
-root = Path(SPECPATH).resolve().parent.parent
+root = Path(SPECPATH).resolve()
 datas = []
 binaries = []
 hiddenimports = [
@@ -22,6 +22,7 @@ datas.extend([
     (str(root / "assets"), "assets"),
     (str(root / ".streamlit"), ".streamlit"),
     (str(root / "VERSION.txt"), "."),
+    (str(root / "editor.html"), "."),
 ])
 
 a = Analysis(
