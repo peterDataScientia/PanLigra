@@ -34,7 +34,7 @@ class FakeBindingSiteReport:
 
 
 def test_v6_version():
-    assert PANLIGRA_VERSION == "6.0.0"
+    assert PANLIGRA_VERSION == Path("VERSION.txt").read_text(encoding="utf-8").strip()
 
 
 def test_scientific_layer_normalizes_all_eight_plip_classes(monkeypatch):
