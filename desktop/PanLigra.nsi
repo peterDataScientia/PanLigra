@@ -1,4 +1,6 @@
 Unicode true
+SetCompressor /SOLID lzma
+SetCompressorDictSize 32
 !include "MUI2.nsh"
 Name "PanLigra"
 OutFile "PanLigra-Setup.exe"
