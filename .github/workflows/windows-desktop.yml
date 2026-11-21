@@ -47,7 +47,7 @@ jobs:
         shell: pwsh
         run: |
           micromamba run -n panligra-build python -m pip install --upgrade pip
-          micromamba run -n panligra-build python -m pip install "streamlit>=1.40,<2" "requests>=2.31,<3" "pyinstaller>=6,<7" pillow
+          micromamba run -n panligra-build python -m pip install -r desktop/requirements-build.txt
           micromamba run -n panligra-build python -m pip install --no-deps plip==3.0.1
           micromamba run -n panligra-build python -c "import rdkit; import streamlit, plip, openbabel, cairo, gemmi; from plip.structure.preparation import PDBComplex; print('Scientific dependencies import OK')"
 
