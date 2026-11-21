@@ -85,7 +85,9 @@ jobs:
         shell: pwsh
         run: |
           choco install nsis -y --no-progress
-          & "C:/Program Files (x86)/NSIS/makensis.exe" "desktop/PanLigra.nsi"
+          if (!(Test-Path "dist/PanLigra/PanLigra.exe")) { throw "Bundled executable missing before installer packaging" }
+          & "C:/Program Files (x86)/NSIS/makensis.exe" /NOCD "desktop/PanLigra.nsi"
+          if ($LASTEXITCODE -ne 0) { throw "NSIS compiler failed with exit code $LASTEXITCODE" }
           if (!(Test-Path "PanLigra-Setup.exe")) { throw "Installer missing" }
 
       - name: Upload executable and installer
