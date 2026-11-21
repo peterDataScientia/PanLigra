@@ -44,18 +44,18 @@ jobs:
           init-shell: powershell
 
       - name: Install Python application and packaging tools
-        shell: micromamba-shell {0}
+        shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install "streamlit>=1.40,<2" "requests>=2.31,<3" "pyinstaller>=6,<7" pillow
-          python -m pip install --no-deps plip==3.0.1
-          python -c "import streamlit, plip, openbabel, rdkit, cairo, gemmi; from plip.structure.preparation import PDBComplex; print('Scientific dependencies import OK')"
+          micromamba run -n panligra-build python -m pip install --upgrade pip
+          micromamba run -n panligra-build python -m pip install "streamlit>=1.40,<2" "requests>=2.31,<3" "pyinstaller>=6,<7" pillow
+          micromamba run -n panligra-build python -m pip install --no-deps plip==3.0.1
+          micromamba run -n panligra-build python -c "import rdkit; import streamlit, plip, openbabel, cairo, gemmi; from plip.structure.preparation import PDBComplex; print('Scientific dependencies import OK')"
 
       - name: Compile application
-        shell: micromamba-shell {0}
+        shell: pwsh
         run: |
-          python -m compileall -q app.py utils.py interactive_engine.py interaction_3d.py scientific_records.py rcsb_pdb.py desktop
-          pyinstaller --noconfirm --clean desktop/PanLigra.spec
+          micromamba run -n panligra-build python -m compileall -q app.py utils.py interactive_engine.py interaction_3d.py scientific_records.py rcsb_pdb.py desktop
+          micromamba run -n panligra-build pyinstaller --noconfirm --clean desktop/PanLigra.spec
           if (!(Test-Path "dist/PanLigra/PanLigra.exe")) { throw "Executable missing" }
 
       - name: Windows launch smoke test
