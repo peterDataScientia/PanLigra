@@ -894,11 +894,8 @@ def interactions_page():
     st.caption("Original PLIP-derived scientific records; presentation edits do not alter these values.")
     st.write("**Binding site:**", result["selected_site"])
     st.write("**Scientific signature (SHA-256):**", result.get("scientific_signature", "Unavailable"))
-    st.dataframe(result["scientific_df"], use_container_width=True, hide_index=True)
-    for label,frame in (("Figure interaction records",result["figure_interaction_df"]),):
-        with st.expander(label):
-            st.dataframe(frame,use_container_width=True,hide_index=True)
-    st.page_link(editor_pg,label="Customize diagram",icon=":material/draw:")
+    st.info("Review the live interaction table in the 2D Editor. Export unchanged scientific records from the Export page.")
+    st.page_link(editor_pg,label="Review interactions in 2D Editor",icon=":material/draw:")
 
 def editor_page():
     result = _result_required()
