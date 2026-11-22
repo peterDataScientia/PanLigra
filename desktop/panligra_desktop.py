@@ -49,25 +49,22 @@ def run_server() -> None:
     with open(log_path(), "a", encoding="utf-8", buffering=1) as log:
         sys.stdout = log
         sys.stderr = log
-        from streamlit import config as st_config
-        from streamlit.web import bootstrap
+        # PanDockLab's proven frozen Streamlit boot path uses the CLI rather
+        # than bootstrap.run(), with development mode forced off.
+        from streamlit.web import cli as streamlit_cli
 
-        st_config.set_option("server.port", port)
-        st_config.set_option("server.address", HOST)
-        st_config.set_option("global.developmentMode", False)
-        bootstrap.run(
+        sys.argv = [
+            "streamlit",
+            "run",
             str(root / "app.py"),
-            False,
-            [],
-            {
-                "global.developmentMode": False,
-                "server.headless": True,
-                "server.address": HOST,
-                "server.port": port,
-                "browser.gatherUsageStats": False,
-                "server.fileWatcherType": "none",
-            },
-        )
+            "--global.developmentMode=false",
+            f"--server.address={HOST}",
+            f"--server.port={port}",
+            "--server.headless=true",
+            "--server.fileWatcherType=none",
+            "--browser.gatherUsageStats=false",
+        ]
+        streamlit_cli.main()
 
 
 def wait_until_ready(process: subprocess.Popen, port: int) -> bool:
