@@ -1,0 +1,62 @@
+name: Publish PanLigra Windows v1.0.0
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-windows-release.yml"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: panligra-release-v1.0.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+
+      - name: Verify release version
+        run: |
+          test "$(tr -d '\r\n' < VERSION.txt)" = "1.0.0"
+          test -f desktop/RELEASE_NOTES_v1.0.0.md
+
+      - name: Retrieve tested 105 MB Windows installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p release
+          gh run download 44950892536 --name PanLigra-Windows-Setup --dir release
+          test -s release/PanLigra-Setup.exe
+
+      - name: Verify and checksum installer
+        run: |
+          cd release
+          sha256sum PanLigra-Setup.exe > PanLigra-Setup.exe.sha256
+          ls -lh PanLigra-Setup.exe PanLigra-Setup.exe.sha256
+          sha256sum -c PanLigra-Setup.exe.sha256
+
+      - name: Publish official GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view v1.0.0 >/dev/null 2>&1; then
+            echo "Release v1.0.0 already exists: do not silently overwrite published assets."
+            exit 1
+          fi
+          gh release create v1.0.0 \
+            release/PanLigra-Setup.exe \
+            release/PanLigra-Setup.exe.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "PanLigra v1.0.0 — Windows Desktop" \
+            --notes-file desktop/RELEASE_NOTES_v1.0.0.md \
+            --latest
+          gh release view v1.0.0 --json url,assets,tagName
