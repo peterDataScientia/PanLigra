@@ -10,7 +10,7 @@ hiddenimports = [
     "scientific_records", "rcsb_pdb", "panligra_version",
 ]
 
-for package in ("streamlit", "plip", "openbabel", "rdkit", "cairo", "gemmi"):
+for package in ("streamlit", "plip", "openbabel", "rdkit", "cairo", "gemmi", "webview"):
     pkg_datas, pkg_bins, pkg_hidden = collect_all(package)
     datas += pkg_datas
     binaries += pkg_bins
