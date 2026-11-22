@@ -7,6 +7,7 @@ on the Windows main thread and makes shutdown predictable.
 from __future__ import annotations
 
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -24,11 +25,11 @@ def bundle_root() -> Path:
     return Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 
 
-def prepare_runtime(root: Path) -> None:
+def prepare_runtime(root: Path, port: int) -> None:
     os.chdir(root)
     os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
     os.environ["STREAMLIT_SERVER_ADDRESS"] = HOST
-    os.environ["STREAMLIT_SERVER_PORT"] = str(PORT)
+    os.environ["STREAMLIT_SERVER_PORT"] = str(port)
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
 
 
@@ -40,7 +41,8 @@ def log_path() -> Path:
 
 def run_server() -> None:
     root = bundle_root()
-    prepare_runtime(root)
+    port = int(os.environ.get("PANLIGRA_DESKTOP_PORT", PORT))
+    prepare_runtime(root, port)
     # Windowed PyInstaller executables have no valid stdout/stderr handles.
     # Streamlit and native scientific packages need writable streams.
     with open(log_path(), "a", encoding="utf-8", buffering=1) as log:
@@ -49,7 +51,7 @@ def run_server() -> None:
         from streamlit import config as st_config
         from streamlit.web import bootstrap
 
-        st_config.set_option("server.port", PORT)
+        st_config.set_option("server.port", port)
         st_config.set_option("server.address", HOST)
         bootstrap.run(
             str(root / "app.py"),
@@ -58,15 +60,15 @@ def run_server() -> None:
             {
                 "server.headless": True,
                 "server.address": HOST,
-                "server.port": PORT,
+                "server.port": port,
                 "browser.gatherUsageStats": False,
                 "server.fileWatcherType": "none",
             },
         )
 
 
-def wait_until_ready(process: subprocess.Popen) -> bool:
-    base = f"http://{HOST}:{PORT}"
+def wait_until_ready(process: subprocess.Popen, port: int) -> bool:
+    base = f"http://{HOST}:{port}"
     deadline = time.monotonic() + START_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         if process.poll() is not None:
@@ -86,9 +88,21 @@ def wait_until_ready(process: subprocess.Popen) -> bool:
     return False
 
 
+def choose_port() -> int:
+    """Use the standard port when free, otherwise avoid colliding with an older install."""
+    with socket.socket() as probe:
+        try:
+            probe.bind((HOST, PORT))
+            return PORT
+        except OSError:
+            probe.bind((HOST, 0))
+            return int(probe.getsockname()[1])
+
+
 def main() -> None:
     root = bundle_root()
-    prepare_runtime(root)
+    port = choose_port()
+    prepare_runtime(root, port)
     if not (root / "app.py").is_file():
         raise RuntimeError(f"Bundled app.py missing at {root}")
 
@@ -106,9 +120,10 @@ def main() -> None:
             stdout=log,
             stderr=subprocess.STDOUT,
             creationflags=flags,
+            env={**os.environ, "PANLIGRA_DESKTOP_PORT": str(port)},
         )
     try:
-        if not wait_until_ready(worker):
+        if not wait_until_ready(worker, port):
             raise RuntimeError(
                 "PanLigra server did not provide its homepage. "
                 f"See {log_path()} for startup diagnostics."
@@ -117,7 +132,7 @@ def main() -> None:
 
         webview.create_window(
             "PanLigra",
-            f"http://{HOST}:{PORT}/",
+            f"http://{HOST}:{port}/",
             width=1280,
             height=820,
             min_size=(850, 600),
