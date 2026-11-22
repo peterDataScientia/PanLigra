@@ -100,6 +100,14 @@ def choose_port() -> int:
 
 
 def main() -> None:
+    # A PyInstaller windowed executable has no console streams.
+    # Keep third-party GUI diagnostics in a persistent file.
+    if getattr(sys, "frozen", False) and (sys.stdout is None or sys.stderr is None):
+        gui_log = open(log_path(), "a", encoding="utf-8", buffering=1)
+        if sys.stdout is None:
+            sys.stdout = gui_log
+        if sys.stderr is None:
+            sys.stderr = gui_log
     root = bundle_root()
     port = choose_port()
     prepare_runtime(root, port)
