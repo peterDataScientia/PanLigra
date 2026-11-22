@@ -82,6 +82,11 @@ jobs:
                 }
               } catch { }
             }
+            if ($ready) {
+              micromamba run -n panligra-build python -m pip install "playwright>=1.50,<2"
+              micromamba run -n panligra-build python desktop/smoke_ui.py
+              if ($LASTEXITCODE -ne 0) { throw "PanLigra rendered home page test failed" }
+            }
             if (!$ready) {
               Get-Content "$env:RUNNER_TEMP/panligra.stdout.txt" -ErrorAction SilentlyContinue
               Get-Content "$env:RUNNER_TEMP/panligra.stderr.txt" -ErrorAction SilentlyContinue
