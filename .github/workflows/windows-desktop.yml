@@ -90,6 +90,9 @@ jobs:
             if (!$ready) {
               Get-Content "$env:RUNNER_TEMP/panligra.stdout.txt" -ErrorAction SilentlyContinue
               Get-Content "$env:RUNNER_TEMP/panligra.stderr.txt" -ErrorAction SilentlyContinue
+              Write-Host "=== Frozen worker log ==="
+              Get-Content "$env:LOCALAPPDATA/PanLigra/panligra-desktop.log" -Tail 150 -ErrorAction SilentlyContinue
+              Write-Host ("Worker exit status: " + $proc.HasExited)
               throw "PanLigra did not start on localhost"
             }
           } finally {
