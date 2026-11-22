@@ -91,6 +91,32 @@ jobs:
             Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
           }
 
+      - name: Verify embedded desktop window opens
+        shell: pwsh
+        run: |
+          $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--disable-gpu"
+          $desktop = Start-Process -FilePath "$PWD/dist/PanLigra/PanLigra.exe" -PassThru
+          try {
+            $hasWindow = $false
+            for ($i = 0; $i -lt 30; $i++) {
+              Start-Sleep -Seconds 2
+              $desktop.Refresh()
+              if ($desktop.HasExited) { break }
+              if ($desktop.MainWindowHandle -ne [IntPtr]::Zero) {
+                $hasWindow = $true
+                break
+              }
+            }
+            if (!$hasWindow) {
+              Get-Content "$env:LOCALAPPDATA/PanLigra/panligra-desktop.log" -Tail 100 -ErrorAction SilentlyContinue
+              throw "Embedded PanLigra GUI window did not appear"
+            }
+            Write-Host "Native desktop GUI window opened without launching a browser window."
+          } finally {
+            Stop-Process -Id $desktop.Id -Force -ErrorAction SilentlyContinue
+            Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*--panligra-internal-server*" -and $_.Name -eq "PanLigra.exe" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+          }
+
       - name: Build user-level Windows installer
         shell: pwsh
         run: |
