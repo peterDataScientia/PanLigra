@@ -157,8 +157,20 @@ if __name__ == "__main__":
     else:
         try:
             main()
-        except Exception:
+        except Exception as error:
             import traceback
             with open(log_path(), "a", encoding="utf-8") as output:
                 traceback.print_exc(file=output)
-            raise
+            if sys.platform == "win32":
+                import ctypes
+                ctypes.windll.user32.MessageBoxW(
+                    None,
+                    "PanLigra could not open its desktop window.\n\n"
+                    + str(error)
+                    + "\n\nStartup log: " + str(log_path())
+                    + "\n\nThe Microsoft Edge WebView2 Runtime is required.",
+                    "PanLigra startup error",
+                    0x10,
+                )
+            else:
+                raise
