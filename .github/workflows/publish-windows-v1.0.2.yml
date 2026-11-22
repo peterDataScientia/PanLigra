@@ -1,0 +1,65 @@
+name: Publish PanLigra v1.0.2 Embedded Desktop
+
+on:
+  workflow_run:
+    workflows: ["PanLigra Windows Desktop Installer"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: panligra-v1.0.2-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Confirm release matches tested source
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          test "$(tr -d '\r\n' < VERSION.txt)" = "1.0.2"
+          test -s release-notes/v1.0.2.md
+          git cat-file -e "$TESTED_SHA^{commit}"
+          git diff --quiet "$TESTED_SHA" HEAD -- VERSION.txt desktop/ app.py utils.py interactive_engine.py interaction_3d.py scientific_records.py rcsb_pdb.py .github/workflows/windows-desktop.yml
+
+      - name: Download exact successful Windows GUI build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          mkdir release
+          gh run download "$RUN_ID" --name PanLigra-Windows-Setup --dir release
+          test -s release/PanLigra-Setup.exe
+          cd release
+          sha256sum PanLigra-Setup.exe > PanLigra-Setup.exe.sha256
+          sha256sum -c PanLigra-Setup.exe.sha256
+          ls -lh
+
+      - name: Publish official v1.0.2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view v1.0.2 >/dev/null 2>&1; then
+            echo "v1.0.2 release exists; do not overwrite a published installer."
+            exit 1
+          fi
+          gh release create v1.0.2 \
+            release/PanLigra-Setup.exe \
+            release/PanLigra-Setup.exe.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "PanLigra v1.0.2 — Embedded Windows Desktop" \
+            --notes-file release-notes/v1.0.2.md \
+            --latest
+          gh release view v1.0.2 --json url,tagName,assets
