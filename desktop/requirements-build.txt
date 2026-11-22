@@ -2,3 +2,4 @@ streamlit>=1.40,<2
 requests>=2.31,<3
 pyinstaller>=6,<7
 pillow
+pywebview>=5,<7
