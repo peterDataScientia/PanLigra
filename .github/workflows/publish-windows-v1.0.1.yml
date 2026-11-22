@@ -1,0 +1,59 @@
+name: Publish PanLigra Windows v1.0.1 GUI Hotfix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-windows-v1.0.1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirm release version
+        run: |
+          test "$(tr -d '\r\n' < VERSION.txt)" = "1.0.1"
+          test -s desktop/RELEASE_NOTES_v1.0.1.md
+
+      - name: Wait for verified GUI build and download installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh run watch 44991544067 --exit-status
+          mkdir -p release
+          gh run download 44991544067 --name PanLigra-Windows-Setup --dir release
+          test -s release/PanLigra-Setup.exe
+
+      - name: Integrity checksum
+        run: |
+          cd release
+          sha256sum PanLigra-Setup.exe > PanLigra-Setup.exe.sha256
+          sha256sum -c PanLigra-Setup.exe.sha256
+          ls -lh PanLigra-Setup.exe
+
+      - name: Publish v1.0.1 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view v1.0.1 >/dev/null 2>&1; then
+            echo "v1.0.1 release already exists; not overwriting."
+            exit 1
+          fi
+          gh release create v1.0.1 \
+            release/PanLigra-Setup.exe \
+            release/PanLigra-Setup.exe.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "PanLigra v1.0.1 — Windows Desktop Window Hotfix" \
+            --notes-file desktop/RELEASE_NOTES_v1.0.1.md \
+            --latest
+          gh release view v1.0.1 --json url,assets,tagName
