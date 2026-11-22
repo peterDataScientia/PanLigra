@@ -93,6 +93,13 @@ jobs:
               Write-Host "=== Frozen worker log ==="
               Get-Content "$env:LOCALAPPDATA/PanLigra/panligra-desktop.log" -Tail 150 -ErrorAction SilentlyContinue
               Write-Host ("Worker exit status: " + $proc.HasExited)
+              foreach ($path in @("/", "/_stcore/health", "/healthz", "/_stcore/host-config")) {
+                try {
+                  $response = Invoke-WebRequest -Uri ("http://127.0.0.1:18763" + $path) -UseBasicParsing -TimeoutSec 5 -SkipHttpErrorCheck
+                  $body = [string]$response.Content
+                  Write-Host ("HTTP " + $path + ": " + [int]$response.StatusCode + "; body=" + $body.Substring(0, [Math]::Min($body.Length, 500)))
+                } catch { Write-Host ("HTTP " + $path + " error: " + $_.Exception.Message) }
+              }
               throw "PanLigra did not start on localhost"
             }
           } finally {
