@@ -31,6 +31,7 @@ def prepare_runtime(root: Path, port: int) -> None:
     os.environ["STREAMLIT_SERVER_ADDRESS"] = HOST
     os.environ["STREAMLIT_SERVER_PORT"] = str(port)
     os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
+    os.environ["STREAMLIT_GLOBAL_DEVELOPMENT_MODE"] = "false"
 
 
 def log_path() -> Path:
@@ -53,11 +54,13 @@ def run_server() -> None:
 
         st_config.set_option("server.port", port)
         st_config.set_option("server.address", HOST)
+        st_config.set_option("global.developmentMode", False)
         bootstrap.run(
             str(root / "app.py"),
             False,
             [],
             {
+                "global.developmentMode": False,
                 "server.headless": True,
                 "server.address": HOST,
                 "server.port": port,
@@ -137,6 +140,7 @@ def main() -> None:
                 f"See {log_path()} for startup diagnostics."
             )
         import webview
+        webview.settings["ALLOW_DOWNLOADS"] = True
 
         webview.create_window(
             "PanLigra",
