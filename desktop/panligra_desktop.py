@@ -1,98 +1,149 @@
-"""Windows desktop entry point for the bundled PanLigra Streamlit application."""
+"""PanLigra Windows desktop: embedded WebView2 shell and private Streamlit worker.
+
+The primary process is a genuine GUI (no command prompt or external browser).
+A separate frozen subprocess runs the Streamlit server; this keeps the GUI loop
+on the Windows main thread and makes shutdown predictable.
+"""
 from __future__ import annotations
 
 import os
-import socket
 import subprocess
 import sys
-import threading
 import time
-import webbrowser
+import urllib.error
+import urllib.request
 from pathlib import Path
 
+HOST = "127.0.0.1"
 PORT = 18763
+SERVER_ARG = "--panligra-internal-server"
+START_TIMEOUT_SECONDS = 60
 
 
 def bundle_root() -> Path:
     return Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 
 
-def open_desktop_window(url: str) -> None:
-    """Prefer an Edge app-mode window with no URL bar, using Windows' built-in browser."""
-    if sys.platform == "win32":
-        roots = (
-            os.environ.get("PROGRAMFILES(X86)", ""),
-            os.environ.get("PROGRAMFILES", ""),
-            os.environ.get("LOCALAPPDATA", ""),
+def prepare_runtime(root: Path) -> None:
+    os.chdir(root)
+    os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
+    os.environ["STREAMLIT_SERVER_ADDRESS"] = HOST
+    os.environ["STREAMLIT_SERVER_PORT"] = str(PORT)
+    os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
+
+
+def log_path() -> Path:
+    folder = Path(os.environ.get("LOCALAPPDATA") or str(Path.home())) / "PanLigra"
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder / "panligra-desktop.log"
+
+
+def run_server() -> None:
+    root = bundle_root()
+    prepare_runtime(root)
+    # Windowed PyInstaller executables have no valid stdout/stderr handles.
+    # Streamlit and native scientific packages need writable streams.
+    with open(log_path(), "a", encoding="utf-8", buffering=1) as log:
+        sys.stdout = log
+        sys.stderr = log
+        from streamlit import config as st_config
+        from streamlit.web import bootstrap
+
+        st_config.set_option("server.port", PORT)
+        st_config.set_option("server.address", HOST)
+        bootstrap.run(
+            str(root / "app.py"),
+            False,
+            [],
+            {
+                "server.headless": True,
+                "server.address": HOST,
+                "server.port": PORT,
+                "browser.gatherUsageStats": False,
+                "server.fileWatcherType": "none",
+            },
         )
-        candidates = [
-            Path(directory) / "Microsoft" / "Edge" / "Application" / "msedge.exe"
-            for directory in roots if directory
-        ]
-        for executable in candidates:
-            if executable.is_file():
-                try:
-                    subprocess.Popen(
-                        [str(executable), f"--app={url}", "--no-first-run"],
-                        stdin=subprocess.DEVNULL,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                    return
-                except OSError:
-                    pass
-    webbrowser.open(url)
 
 
-def open_when_ready(port: int) -> None:
-    for _ in range(150):
-        time.sleep(0.3)
+def wait_until_ready(process: subprocess.Popen) -> bool:
+    base = f"http://{HOST}:{PORT}"
+    deadline = time.monotonic() + START_TIMEOUT_SECONDS
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            return False
         try:
-            with socket.create_connection(("127.0.0.1", port), timeout=0.25):
-                open_desktop_window(f"http://127.0.0.1:{port}")
-                return
-        except OSError:
-            continue
+            with urllib.request.urlopen(base + "/_stcore/health", timeout=1) as response:
+                if response.status != 200:
+                    time.sleep(0.3)
+                    continue
+            with urllib.request.urlopen(base + "/", timeout=2) as response:
+                page = response.read(300_000).decode("utf-8", errors="replace")
+                if response.status == 200 and "streamlit" in page.lower():
+                    return True
+        except (urllib.error.URLError, TimeoutError, OSError):
+            pass
+        time.sleep(0.4)
+    return False
 
 
 def main() -> None:
     root = bundle_root()
-    os.chdir(root)
-    # PyInstaller windowed mode has no console handles; give third-party
-    # libraries writable streams and keep diagnostics in the user's profile.
-    if getattr(sys, "frozen", False) and (sys.stdout is None or sys.stderr is None):
-        logdir = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "PanLigra"
-        logdir.mkdir(parents=True, exist_ok=True)
-        logfile = open(logdir / "panligra-desktop.log", "a", encoding="utf-8", buffering=1)
-        if sys.stdout is None:
-            sys.stdout = logfile
-        if sys.stderr is None:
-            sys.stderr = logfile
-    os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
-    os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
-    os.environ["STREAMLIT_SERVER_ADDRESS"] = "127.0.0.1"
-    os.environ["STREAMLIT_SERVER_PORT"] = str(PORT)
+    prepare_runtime(root)
+    if not (root / "app.py").is_file():
+        raise RuntimeError(f"Bundled app.py missing at {root}")
 
-    from streamlit import config as st_config
-    from streamlit.web import bootstrap
+    if getattr(sys, "frozen", False):
+        command = [sys.executable, SERVER_ARG]
+    else:
+        command = [sys.executable, str(Path(__file__).resolve()), SERVER_ARG]
 
-    st_config.set_option("server.port", PORT)
-    st_config.set_option("server.address", "127.0.0.1")
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    with open(log_path(), "a", encoding="utf-8", buffering=1) as log:
+        worker = subprocess.Popen(
+            command,
+            cwd=str(root),
+            stdin=subprocess.DEVNULL,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            creationflags=flags,
+        )
+    try:
+        if not wait_until_ready(worker):
+            raise RuntimeError(
+                "PanLigra server did not provide its homepage. "
+                f"See {log_path()} for startup diagnostics."
+            )
+        import webview
 
-    threading.Thread(target=open_when_ready, args=(PORT,), daemon=True).start()
-    bootstrap.run(
-        str(root / "app.py"),
-        False,
-        [],
-        {
-            "server.headless": True,
-            "server.address": "127.0.0.1",
-            "server.port": PORT,
-            "browser.gatherUsageStats": False,
-            "server.fileWatcherType": "none",
-        },
-    )
+        webview.create_window(
+            "PanLigra",
+            f"http://{HOST}:{PORT}/",
+            width=1280,
+            height=820,
+            min_size=(850, 600),
+            background_color="#ffffff",
+            text_select=True,
+        )
+        # Real embedded desktop window. Never launch Edge/Chrome externally.
+        webview.start(gui="edgechromium", debug=False)
+    finally:
+        if worker.poll() is None:
+            worker.terminate()
+            try:
+                worker.wait(timeout=8)
+            except subprocess.TimeoutExpired:
+                worker.kill()
+                worker.wait(timeout=5)
 
 
 if __name__ == "__main__":
-    main()
+    if SERVER_ARG in sys.argv[1:]:
+        run_server()
+    else:
+        try:
+            main()
+        except Exception:
+            import traceback
+            with open(log_path(), "a", encoding="utf-8") as output:
+                traceback.print_exc(file=output)
+            raise
