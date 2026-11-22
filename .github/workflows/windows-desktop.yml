@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "desktop/**"
+      - "VERSION.txt"
       - ".github/workflows/windows-desktop.yml"
     tags:
       - "v*"
