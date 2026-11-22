@@ -51,7 +51,7 @@ jobs:
           micromamba run -n panligra-build python -m pip install --upgrade pip
           micromamba run -n panligra-build python -m pip install -r desktop/requirements-build.txt
           micromamba run -n panligra-build python -m pip install --no-deps plip==3.0.1
-          micromamba run -n panligra-build python -c "import rdkit; import streamlit, plip, openbabel, cairo, gemmi; from plip.structure.preparation import PDBComplex; print('Scientific dependencies import OK')"
+          micromamba run -n panligra-build python -c "import rdkit; import streamlit, plip, openbabel, cairo, gemmi, webview; from plip.structure.preparation import PDBComplex; print('Scientific and embedded UI dependencies import OK')"
 
       - name: Compile application
         shell: pwsh
@@ -59,6 +59,7 @@ jobs:
           micromamba run -n panligra-build python -m compileall -q app.py utils.py interactive_engine.py interaction_3d.py scientific_records.py rcsb_pdb.py desktop
           micromamba run -n panligra-build pyinstaller --noconfirm --clean desktop/PanLigra.spec
           if (!(Test-Path "dist/PanLigra/PanLigra.exe")) { throw "Executable missing" }
+          micromamba run -n panligra-build python -c "import pefile; p=pefile.PE(r'dist/PanLigra/PanLigra.exe'); assert p.OPTIONAL_HEADER.Subsystem == 2, 'Expected Windows GUI subsystem'; print('GUI subsystem verified')"
           $files = Get-ChildItem "dist/PanLigra" -File -Recurse
           Write-Host "Largest frozen application files:"
           $files | Sort-Object Length -Descending | Select-Object -First 30 @{N="MB";E={[math]::Round($_.Length / 1MB, 1)}},FullName | Format-Table -AutoSize
@@ -67,7 +68,7 @@ jobs:
       - name: Windows launch smoke test
         shell: pwsh
         run: |
-          $proc = Start-Process -FilePath "$PWD/dist/PanLigra/PanLigra.exe" -PassThru -RedirectStandardOutput "$env:RUNNER_TEMP/panligra.stdout.txt" -RedirectStandardError "$env:RUNNER_TEMP/panligra.stderr.txt"
+          $proc = Start-Process -FilePath "$PWD/dist/PanLigra/PanLigra.exe" -ArgumentList "--panligra-internal-server" -PassThru -RedirectStandardOutput "$env:RUNNER_TEMP/panligra.stdout.txt" -RedirectStandardError "$env:RUNNER_TEMP/panligra.stderr.txt"
           try {
             $ready = $false
             for ($i=0; $i -lt 90; $i++) {
@@ -75,7 +76,10 @@ jobs:
               if ($proc.HasExited) { break }
               try {
                 $r = Invoke-WebRequest -Uri "http://127.0.0.1:18763/_stcore/health" -UseBasicParsing -TimeoutSec 2
-                if ($r.StatusCode -eq 200) { $ready = $true; break }
+                if ($r.StatusCode -eq 200) {
+                  $home = Invoke-WebRequest -Uri "http://127.0.0.1:18763/" -UseBasicParsing -TimeoutSec 3
+                  if ($home.StatusCode -eq 200 -and $home.Content.ToLowerInvariant().Contains("streamlit")) { $ready = $true; break }
+                }
               } catch { }
             }
             if (!$ready) {
