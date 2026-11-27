@@ -1,0 +1,3 @@
+include VERSION.txt editor.html README.md LICENSE THIRD_PARTY_NOTICES.md
+include *.py
+include assets/panligra_logo_icon.png assets/panligra_ui.css
