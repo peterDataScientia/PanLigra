@@ -145,7 +145,7 @@ header.ribbon-collapsed .brand{margin-bottom:4px}
 'use strict';
 const data=JSON.parse(document.getElementById('batch-data').textContent);
 const $=id=>document.getElementById(id), frame=$('editor');
-let current=Math.min(data.index||0,data.entries.length-1), busy=false, zoom=1, fit=true, show3d=false;
+let current=Math.min(data.index||0,data.entries.length-1), ready=false, busy=false, zoom=1, fit=true, show3d=false;
 const entries=data.entries;
 const copy=x=>JSON.parse(JSON.stringify(x));
 const safeJSON=x=>JSON.stringify(x).replace(/</g,'\\u003c');
@@ -173,12 +173,13 @@ function view(){
   stage.style.overflow='auto';
   $('zoom').textContent=fit?'Fit':Math.round(zoom*100)+'% of fit';
 }
-function capture(){if(!api())throw Error('Editor is not ready');entries[current].layout=api().snapshot();entries[current].svg=api().svg();}
+function capture(){if(!ready||!api())throw Error('Editor is not ready');entries[current].layout=api().snapshot();entries[current].svg=api().svg();}
 function refresh(message=''){
   $('pick').replaceChildren(...entries.map((e,i)=>new Option((i+1)+'. '+e.id+(e.done?' ✓':''),i)));
   $('pick').value=current;
   $('prev').disabled=busy||current===0;$('next').disabled=busy||current===entries.length-1;
-  for(const id of ['pick','approve','global','save','export','fit','minus','plus','figsize'])$(id).disabled=busy;
+  for(const id of ['approve','global','save','export','fit','minus','plus','figsize'])$(id).disabled=busy||!ready;
+  $('pick').disabled=busy;
   $('approve').textContent=current===entries.length-1?'Finish editing':'Save & Next';
   const percent=Math.round(100*entries.filter(e=>e.done).length/entries.length);
   document.querySelector('.progress span').style.width=percent+'%';
@@ -202,7 +203,7 @@ function openEditor(e){
 }
 async function show(i,save=true){
   if(busy)return;busy=true;refresh();
-  try{if(save)capture();current=i;await openEditor(entries[current]);}
+  try{if(save&&ready)capture();ready=false;current=i;await openEditor(entries[current]);ready=true;}
   catch(e){$('status').textContent=e.message;busy=false;refresh(e.message);return;}
   busy=false;refresh();view();
 }
@@ -290,10 +291,10 @@ def export_html(entries, output, failures=None, *, offline=True):
     # The original drawing and editor coordinate system remain intact. Only
     # the exported page changes, with uniform scaling and centered margins.
     template = template.replace("function exportCanvasGeometry(){", "function originalCanvasGeometry(){", 1)
-    template = template.replace("function scaledExportGeometry(){", "function exportCanvasGeometry(){return state.batchFigureSize || originalCanvasGeometry();}\\nfunction scaledExportGeometry(){", 1)
+    template = template.replace("function scaledExportGeometry(){", "function exportCanvasGeometry(){return state.batchFigureSize || originalCanvasGeometry();}\nfunction scaledExportGeometry(){", 1)
     template = template.replace("function sceneSvg(){const g=exportCanvasGeometry()", "function sceneSvg(){const g=originalCanvasGeometry()", 1)
     template = template.replace("function sceneSvg(){", "function originalSceneSvg(){", 1)
-    template = template.replace("function originalSceneSvg(){", EXPORT_SIZE_JS + "\\nfunction originalSceneSvg(){", 1)
+    template = template.replace("function originalSceneSvg(){", EXPORT_SIZE_JS + "\nfunction originalSceneSvg(){", 1)
     if offline:
         template = re.sub(r'<script\s+src="https?://[^"]+"\s*></script>', "", template)
     payload = {"template": template, "entries": entries, "failures": failures or [], "index": 0, "offline": offline}
