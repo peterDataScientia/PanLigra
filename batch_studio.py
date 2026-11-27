@@ -68,11 +68,11 @@ function view(){
   const stage=doc.getElementById('pv-stage');
   const ratio=Number(svg.getAttribute('width'))/Number(svg.getAttribute('height'));
   if(!Number.isFinite(ratio)||ratio<=0)return;
-  const availableWidth=Math.max(100,grid.clientWidth);
+  const availableWidth=Math.max(100,stage.clientWidth-24);
   const availableHeight=Math.max(100,frame.clientHeight-stage.getBoundingClientRect().top-24);
-  const baseline=Math.min(availableWidth*(show3d?.52:1),availableHeight*ratio);
+  const baseline=Math.min(availableWidth*(show3d ? 0.52 : 1),availableHeight*ratio);
   const w=Math.round(baseline*(fit?1:zoom));
-  svg.style.width=w+'px';svg.style.maxWidth='none';svg.style.height='auto';svg.style.justifySelf='center';
+  svg.style.width=w+'px';svg.style.maxWidth='none';svg.style.height='auto';svg.style.justifySelf=w>availableWidth?'start':'center';
   stage.style.overflow='auto';
   $('zoom').textContent=fit?'Fit':Math.round(zoom*100)+'% of fit';
 }
