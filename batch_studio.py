@@ -37,7 +37,49 @@ body{display:flex;flex-direction:column;min-height:0}
 #pv-interaction-records .summary{color:#23374d;font-weight:700}
 @media(max-width:720px){#pv-root.batch-inspector-open{grid-template-columns:minmax(0,1fr) minmax(210px,42%)}#pv-style-panel{padding:5px}}
 """
-BRIDGE = """
+BRIDGE = r"""
+async function batchOfflinePDF(){
+  const g=scaledExportGeometry(), name=(state.site||'PanLigra').replace(/[^a-zA-Z0-9_.-]/g,'_')+'_edited_'+g.scale+'x.pdf';
+  status.textContent='Preparing offline PDF…';
+  try{
+    const image=await new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(new Blob([sceneSvg()],{type:'image/svg+xml;charset=utf-8'}));
+      const im=new Image();
+      im.onload=()=>{URL.revokeObjectURL(url);resolve(im)};
+      im.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Cannot rasterize figure'))};
+      im.src=url;
+    });
+    const canvas=document.createElement('canvas');canvas.width=g.width;canvas.height=g.height;
+    const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,g.width,g.height);ctx.drawImage(image,0,0,g.width,g.height);
+    const rgba=ctx.getImageData(0,0,g.width,g.height).data;
+    let rgb=new Uint8Array(g.width*g.height*3);
+    for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2]}
+    let filter='';
+    if(typeof CompressionStream==='function'){
+      rgb=new Uint8Array(await new Response(new Blob([rgb]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+      filter=' /Filter /FlateDecode';
+    }
+    const enc=new TextEncoder(), parts=[], offsets=[0];let length=0;
+    const add=v=>{const p=typeof v==='string'?enc.encode(v):v;parts.push(p);length+=p.length};
+    const obj=(n,body)=>{offsets[n]=length;add(n+' 0 obj\n');add(body);add('\nendobj\n')};
+    const w=(g.baseWidth*.75).toFixed(4),h=(g.baseHeight*.75).toFixed(4);
+    add('%PDF-1.4\n');
+    obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+    obj(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+w+' '+h+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
+    offsets[4]=length;add('4 0 obj\n<< /Type /XObject /Subtype /Image /Width '+g.width+' /Height '+g.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8'+filter+' /Length '+rgb.length+' >>\nstream\n');add(rgb);add('\nendstream\nendobj\n');
+    const commands='q\n'+w+' 0 0 '+h+' 0 0 cm\n/Im0 Do\nQ\n';
+    obj(5,'<< /Length '+enc.encode(commands).length+' >>\nstream\n'+commands+'endstream');
+    const xref=length;add('xref\n0 6\n0000000000 65535 f \n');
+    for(let i=1;i<=5;i++)add(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+    add('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+    download(name,'application/pdf',new Blob(parts,{type:'application/pdf'}));
+    status.textContent='Offline PDF exported ('+g.width+' × '+g.height+' pixels, lossless raster).';
+  }catch(e){status.textContent='PDF export failed: '+e.message;alert(status.textContent)}
+}
+const batchPdfButton=document.getElementById('pv-pdf');
+batchPdfButton.onclick=()=>{if(window.jspdf?.jsPDF && typeof window.jspdf.jsPDF.API.svg==='function')return exportPDF();return batchOfflinePDF()};
+
 window.panligraBatch = {
     snapshot: () => clone(state),
     svg: () => sceneSvg(),
