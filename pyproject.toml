@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "panligra"
+dynamic = ["version"]
+description = "Protein–ligand interaction analysis and editable publication figures"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-2.0-only"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+dependencies = ["plip==3.0.1", "rdkit>=2025.09,<2026", "openbabel==3.2.1", "pycairo>=1.25", "pandas>=2.1,<3", "numpy>=1.26,<3", "requests>=2.31,<3", "gemmi>=0.7,<1", "streamlit>=1.40,<2", "Pillow"]
+
+[project.urls]
+Homepage = "https://github.com/peterDataScientia/PanLigra"
+Issues = "https://github.com/peterDataScientia/PanLigra/issues"
+
+[project.scripts]
+panligra = "panligra:main"
+panligra-batch = "panligra.batch_studio:main"
+
+[tool.setuptools]
+packages = ["panligra"]
+package-dir = {panligra = "."}
+include-package-data = false
+
+[tool.setuptools.package-data]
+panligra = ["*.py", "VERSION.txt", "editor.html", "assets/panligra_logo_icon.png", "assets/panligra_ui.css"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION.txt"}
