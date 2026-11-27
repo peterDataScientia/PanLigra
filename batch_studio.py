@@ -12,6 +12,31 @@ ROOT = Path(__file__).resolve().parent
 def _json(value):
     return json.dumps(value, ensure_ascii=True, allow_nan=False).replace("<", "\\u003c")
 
+BATCH_EDITOR_CSS = """
+/* Batch-only application chrome; SVG scientific scene untouched. */
+html,body{height:100%;margin:0!important;overflow:hidden;background:#eef2f7;color:#101e32;font-family:Arial,sans-serif}
+body{display:flex;flex-direction:column;min-height:0}
+#pv-root{flex:1;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:0;width:100%;overflow:hidden}
+#pv-root.batch-inspector-open{grid-template-columns:minmax(0,1fr) minmax(280px,330px)}
+#pv-toolbar{grid-column:1/-1;grid-row:1;position:relative;top:auto;z-index:40;border-radius:0;padding:6px 9px;gap:5px;box-shadow:none}
+#pv-wrap{grid-column:1;grid-row:2;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column}
+#pv-stage{flex:1;min-height:0;overflow:auto!important;padding:8px;background:#edf1f6}
+#pv-sync-grid{min-width:0;align-items:start}
+#pv-style-panel{grid-column:2;grid-row:2;position:relative;top:auto;min-height:0;max-height:none;overflow:auto;border-radius:0;border:0;border-left:1px solid #b9c8da;padding:10px;box-shadow:none;background:white}
+#pv-style-panel .pv-style-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+#pv-style-panel .pv-style-grid section{padding:8px;background:#fff;border:1px solid #c5cfdd}
+#pv-style-panel .pv-style-row{gap:5px;margin:5px 0}
+#pv-style-panel :is(label,h4,strong,output,span,.pv-style-help){color:#142238;font-weight:700}
+#pv-style-panel .pv-style-row label{font-size:12px}
+#pv-style-panel :is(input,select,button){color:#111e30;font:600 12px Arial,sans-serif;max-width:100%}
+#pv-style-panel select{min-width:0}
+#pv-toolbar :is(button,summary,select){font-size:13px;font-weight:750}
+#pv-toolbar button:not(.active):not(.primary){color:#10243d}
+#pv-interaction-records{flex:none;margin:0;border-radius:0;max-height:34vh;overflow:auto}
+#pv-interaction-records .head{padding:6px 10px}
+#pv-interaction-records .summary{color:#23374d;font-weight:700}
+@media(max-width:720px){#pv-root.batch-inspector-open{grid-template-columns:minmax(0,1fr) minmax(210px,42%)}#pv-style-panel{padding:5px}}
+"""
 BRIDGE = """
 window.panligraBatch = {
     snapshot: () => clone(state),
@@ -34,8 +59,8 @@ SHELL = r"""<!doctype html><html lang="en"><meta charset="utf-8">
 *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:flex;flex-direction:column;font:14px Arial,sans-serif;color:#172033;background:#eef2f7}
 header{flex:none;background:#fff;border-bottom:1px solid #cbd5e1;padding:9px 14px}
 .brand{display:flex;align-items:center;gap:9px;margin-bottom:8px}.brand img{width:29px;height:29px;object-fit:contain}.brand strong{font-size:19px;color:#142b50}.brand small{color:#64748b}.mode{margin-left:auto;font-size:12px;color:#475569}
-nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}button,select{font:inherit;padding:6px 10px;border:1px solid #b9c8da;border-radius:6px;background:white;color:#142b50;min-height:32px}button:disabled,select:disabled{opacity:.45}button{cursor:pointer}button:hover:not(:disabled){background:#eaf1fa}button.primary{background:#17488a;color:#fff;border-color:#17488a}button.primary:hover:not(:disabled){background:#12386c}#pick{max-width:240px}.separator{height:25px;border-left:1px solid #cbd5e1;margin:0 3px}
-#editor{display:block;flex:1;min-height:0;width:100%;border:0;background:white}#status{margin:6px 0 0;color:#475569;font-size:12px}.progress{height:4px;background:#e2e8f0;margin-top:7px;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;background:#17488a;width:0}
+nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}button,select{font:inherit;font-weight:700;padding:6px 10px;border:1px solid #b9c8da;border-radius:6px;background:white;color:#10243d;min-height:32px}button:disabled,select:disabled{opacity:.45}button{cursor:pointer}button:hover:not(:disabled){background:#eaf1fa}button.primary{background:#17488a;color:#fff;border-color:#17488a}button.primary:hover:not(:disabled){background:#12386c}#pick{max-width:240px}.separator{height:25px;border-left:1px solid #cbd5e1;margin:0 3px}
+#editor{display:block;flex:1;min-height:0;width:100%;border:0;background:white}#status{margin:6px 0 0;color:#172033;font-size:12px;font-weight:700}.progress{height:4px;background:#e2e8f0;margin-top:7px;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;background:#17488a;width:0}
 </style>
 <header><div class="brand"><img id="logo" alt="" src="__BATCH_LOGO__"><strong>PanLigra</strong><small>Batch Studio · __BATCH_VERSION__</small><span class="mode" id="mode"></span></div><nav>
 <button id="prev" title="Previous complex">‹ Previous</button><select id="pick" aria-label="Complex"></select><button id="next" title="Next complex">Next ›</button>
@@ -58,6 +83,8 @@ function api(){return frame.contentWindow?.panligraBatch}
 function view(){
   const doc=frame.contentDocument, svg=doc?.getElementById('pv-svg-canvas'), panel=doc?.getElementById('pv-3d-panel'), grid=doc?.getElementById('pv-sync-grid');
   if(!svg||!panel||!grid)return;
+  const inspector=doc.getElementById('pv-style-panel');
+  doc.getElementById('pv-root').classList.toggle('batch-inspector-open',inspector.style.display!=='none');
   const available=!!frame.contentWindow?.$3Dmol && !data.offline;
   if(!available)show3d=false;
   panel.style.display=show3d?'':'none';
@@ -68,8 +95,8 @@ function view(){
   const stage=doc.getElementById('pv-stage');
   const ratio=Number(svg.getAttribute('width'))/Number(svg.getAttribute('height'));
   if(!Number.isFinite(ratio)||ratio<=0)return;
-  const availableWidth=Math.max(100,stage.clientWidth-24);
-  const availableHeight=Math.max(100,frame.clientHeight-stage.getBoundingClientRect().top-24);
+  const availableWidth=Math.max(100,stage.clientWidth-20);
+  const availableHeight=Math.max(100,stage.clientHeight-20);
   const baseline=Math.min(availableWidth*(show3d ? 0.52 : 1),availableHeight*ratio);
   const w=Math.round(baseline*(fit?1:zoom));
   svg.style.width=w+'px';svg.style.maxWidth='none';svg.style.height='auto';svg.style.justifySelf=w>availableWidth?'start':'center';
@@ -93,6 +120,9 @@ function openEditor(e){
     frame.onload=()=>{try{
       if(!api())throw Error('Native editor failed to initialize');
       if(e.layout)api().restore(e.layout);
+      const doc=frame.contentDocument, inspector=doc.getElementById('pv-style-panel');
+      new frame.contentWindow.MutationObserver(view).observe(inspector,{attributes:true,attributeFilter:['style']});
+      doc.getElementById('pv-interaction-toggle').addEventListener('click',()=>frame.contentWindow.requestAnimationFrame(view));
       view();resolve();
     }catch(err){reject(err)}};
     frame.srcdoc=data.template.replace('__PANLIGRA_SCENE__',()=>safeJSON(e.scene));
@@ -168,6 +198,7 @@ def export_html(entries, output, failures=None, *, offline=True):
     if pos < 0 or "__PANLIGRA_SCENE__" not in template:
         raise RuntimeError("Incompatible native editor")
     template = template[:pos] + BRIDGE + template[pos:]
+    template = template.replace("</style>", BATCH_EDITOR_CSS + "</style>", 1)
     if offline:
         template = re.sub(r'<script\s+src="https?://[^"]+"\s*></script>', "", template)
     payload = {"template": template, "entries": entries, "failures": failures or [], "index": 0, "offline": offline}
