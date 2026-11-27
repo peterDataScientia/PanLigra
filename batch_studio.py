@@ -127,13 +127,17 @@ header{flex:none;background:#fff;border-bottom:1px solid #cbd5e1;padding:9px 14p
 .brand{display:flex;align-items:center;gap:9px;margin-bottom:8px}.brand img{width:29px;height:29px;object-fit:contain}.brand strong{font-size:19px;color:#142b50}.brand small{color:#64748b}.mode{margin-left:auto;font-size:12px;color:#475569}
 nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}button,select{font:inherit;font-weight:700;padding:6px 10px;border:1px solid #b9c8da;border-radius:6px;background:white;color:#10243d;min-height:32px}button:disabled,select:disabled{opacity:.45}button{cursor:pointer}button:hover:not(:disabled){background:#eaf1fa}button.primary{background:#17488a;color:#fff;border-color:#17488a}button.primary:hover:not(:disabled){background:#12386c}#pick{max-width:240px}.separator{height:25px;border-left:1px solid #cbd5e1;margin:0 3px}
 #editor{display:block;flex:1;min-height:0;width:100%;border:0;background:white}#status{margin:6px 0 0;color:#172033;font-size:12px;font-weight:700}.progress{height:4px;background:#e2e8f0;margin-top:7px;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;background:#17488a;width:0}
+header.ribbon-collapsed nav .ribbon-extra{display:none!important}
+header.ribbon-collapsed .brand{margin-bottom:4px}
+#ribbonToggle{margin-left:6px;white-space:nowrap}
+#ribbonToggle[aria-expanded="false"]{background:#eaf1fa}
 </style>
-<header><div class="brand"><img id="logo" alt="" src="__BATCH_LOGO__"><strong>PanLigra</strong><small>Batch Studio · __BATCH_VERSION__</small><span class="mode" id="mode"></span></div><nav>
+<header><div class="brand"><img id="logo" alt="" src="__BATCH_LOGO__"><strong>PanLigra</strong><small>Batch Studio · __BATCH_VERSION__</small><span class="mode" id="mode"></span><button id="ribbonToggle" aria-expanded="true" aria-controls="batchRibbon" title="Expand or collapse batch ribbon">▴ Hide ribbon</button></div><nav id="batchRibbon">
 <button id="prev" title="Previous complex">‹ Previous</button><select id="pick" aria-label="Complex"></select><button id="next" title="Next complex">Next ›</button>
-<button class="primary" id="approve">Save &amp; Next</button><span class="separator"></span>
-<button id="fit" title="Fit figure to viewport">Fit to screen</button><button id="minus" aria-label="Zoom out">−</button><button id="plus" aria-label="Zoom in">+</button><span id="zoom" aria-live="polite">Fit</span><button id="figsize">Figure size</button>
-<span class="separator"></span><button id="toggle3d">Show 3D</button><button id="global">Apply style to all</button>
-<button id="save">Save editable HTML</button><button id="export">Export SVGs (ZIP)</button>
+<button class="primary" id="approve">Save &amp; Next</button><span class="separator ribbon-extra"></span>
+<button class="ribbon-extra" id="fit" title="Fit figure to viewport">Fit to screen</button><button class="ribbon-extra" id="minus" aria-label="Zoom out">−</button><button class="ribbon-extra" id="plus" aria-label="Zoom in">+</button><span class="ribbon-extra" id="zoom" aria-live="polite">Fit</span><button class="ribbon-extra" id="figsize">Figure size</button>
+<span class="separator ribbon-extra"></span><button class="ribbon-extra" id="toggle3d">Show 3D</button><button class="ribbon-extra" id="global">Apply style to all</button>
+<button id="save">Save editable HTML</button><button class="ribbon-extra" id="export">Export SVGs (ZIP)</button>
 </nav><dialog id="sizeDialog" style="border:1px solid #9eb0c6;border-radius:9px;padding:18px;color:#10243d;max-width:95vw"><form method="dialog"><h2 style="margin:0 0 12px;font-size:18px">Figure dimensions</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><label>Width (px)<br><input id="figw" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label><label>Height (px)<br><input id="figh" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label></div><p><label><input type="checkbox" id="lockratio" checked> Lock aspect ratio</label></p><p style="font-size:12px;max-width:330px">Sets SVG, PNG and PDF export dimensions. The molecular geometry stays locked; different aspect ratios add white margins rather than stretching the figure. The editing canvas remains unchanged.</p><div style="display:flex;gap:8px"><button type="button" id="applysize" class="primary">Apply</button><button type="button" id="applysizeall">Apply to all</button><button value="cancel">Cancel</button></div></form></dialog><div id="status" role="status"></div><div class="progress" role="progressbar" aria-label="Reviewed complexes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></header>
 <iframe id="editor" title="PanLigra interaction editor"></iframe>
 <script id="batch-data" type="application/json">__BATCH_DATA__</script>
@@ -187,6 +191,8 @@ function openEditor(e){
       if(!api())throw Error('Native editor failed to initialize');
       if(e.layout)api().restore(e.layout);
       const doc=frame.contentDocument, inspector=doc.getElementById('pv-style-panel');
+      const observer=new frame.contentWindow.ResizeObserver(()=>requestAnimationFrame(view));
+      observer.observe(doc.getElementById('pv-stage'));
       new frame.contentWindow.MutationObserver(view).observe(inspector,{attributes:true,attributeFilter:['style']});
       doc.getElementById('pv-interaction-toggle').addEventListener('click',()=>frame.contentWindow.requestAnimationFrame(view));
       view();resolve();
@@ -201,6 +207,16 @@ async function show(i,save=true){
   busy=false;refresh();view();
 }
 function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+let ribbonCollapsed=!!data.ribbonCollapsed;
+function setRibbon(collapsed){
+  ribbonCollapsed=collapsed;
+  document.querySelector('header').classList.toggle('ribbon-collapsed',collapsed);
+  $('ribbonToggle').setAttribute('aria-expanded',String(!collapsed));
+  $('ribbonToggle').textContent=collapsed?'▾ Show ribbon':'▴ Hide ribbon';
+  requestAnimationFrame(view);
+}
+$('ribbonToggle').onclick=()=>setRibbon(!ribbonCollapsed);
+setRibbon(ribbonCollapsed);
 let sizeRatio=1;
 $('figsize').onclick=()=>{const g=api().figureSize();$('figw').value=g.width;$('figh').value=g.height;sizeRatio=g.width/g.height;$('sizeDialog').showModal()};
 $('figw').oninput=()=>{if($('lockratio').checked)$('figh').value=Math.round(Number($('figw').value)/sizeRatio)};
@@ -225,7 +241,7 @@ $('global').onclick=()=>{
     api().applyStyle(style);capture();refresh('Global defaults applied; individual object overrides retained.');
   }catch(e){refresh(e.message)}
 };
-$('save').onclick=()=>{try{capture();data.index=current;const root=document.documentElement.cloneNode(true);
+$('save').onclick=()=>{try{capture();data.index=current;data.ribbonCollapsed=ribbonCollapsed;const root=document.documentElement.cloneNode(true);
   root.querySelector('#editor').removeAttribute('srcdoc');
   root.querySelector('#batch-data').textContent=safeJSON(data);
   download('PanLigra_batch_edited.html',new Blob(['<!doctype html>'+root.outerHTML],{type:'text/html;charset=utf-8'}));
