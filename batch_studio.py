@@ -1,5 +1,6 @@
 """Batch Studio: reuse PanLigra's native publication editor for many complexes."""
 import argparse
+import base64
 import csv
 import json
 import re
@@ -30,40 +31,69 @@ window.panligraBatch = {
 SHELL = r"""<!doctype html><html lang="en"><meta charset="utf-8">
 <title>PanLigra Batch Studio</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:14px Arial,sans-serif;color:#172033;background:#f5f7fa}
-header{position:sticky;top:0;background:white;padding:12px;z-index:2;border-bottom:1px solid #ccd3df}
-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button,select{font:inherit;padding:8px;border:1px solid #aab4c2;border-radius:5px;background:white;color:inherit}button:disabled{opacity:.45}button{cursor:pointer}iframe{width:100%;height:calc(100vh - 116px);border:0;background:white}#status{margin:8px 0 0}h1{font-size:18px;margin:0 0 8px}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{display:flex;flex-direction:column;font:14px Arial,sans-serif;color:#172033;background:#eef2f7}
+header{flex:none;background:#fff;border-bottom:1px solid #cbd5e1;padding:9px 14px}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:8px}.brand img{width:29px;height:29px;object-fit:contain}.brand strong{font-size:19px;color:#142b50}.brand small{color:#64748b}.mode{margin-left:auto;font-size:12px;color:#475569}
+nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}button,select{font:inherit;padding:6px 10px;border:1px solid #b9c8da;border-radius:6px;background:white;color:#142b50;min-height:32px}button:disabled,select:disabled{opacity:.45}button{cursor:pointer}button:hover:not(:disabled){background:#eaf1fa}button.primary{background:#17488a;color:#fff;border-color:#17488a}button.primary:hover:not(:disabled){background:#12386c}#pick{max-width:240px}.separator{height:25px;border-left:1px solid #cbd5e1;margin:0 3px}
+#editor{display:block;flex:1;min-height:0;width:100%;border:0;background:white}#status{margin:6px 0 0;color:#475569;font-size:12px}.progress{height:4px;background:#e2e8f0;margin-top:7px;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;background:#17488a;width:0}
 </style>
-<header><h1>PanLigra Batch Studio</h1><nav>
-<button id="prev">Previous</button><select id="pick" aria-label="Complex"></select><button id="next">Next</button>
-<button id="approve">Save &amp; Next</button><button id="global">Apply current style to all</button>
-<button id="save">Save editable HTML</button><button id="export">Export all SVGs (ZIP)</button>
-</nav><div id="status" role="status"></div></header>
+<header><div class="brand"><img id="logo" alt="" src="__BATCH_LOGO__"><strong>PanLigra</strong><small>Batch Studio · __BATCH_VERSION__</small><span class="mode" id="mode"></span></div><nav>
+<button id="prev" title="Previous complex">‹ Previous</button><select id="pick" aria-label="Complex"></select><button id="next" title="Next complex">Next ›</button>
+<button class="primary" id="approve">Save &amp; Next</button><span class="separator"></span>
+<button id="fit" title="Fit figure to viewport">Fit to screen</button><button id="minus" aria-label="Zoom out">−</button><button id="plus" aria-label="Zoom in">+</button><span id="zoom" aria-live="polite">Fit</span>
+<span class="separator"></span><button id="toggle3d">Show 3D</button><button id="global">Apply style to all</button>
+<button id="save">Save editable HTML</button><button id="export">Export SVGs (ZIP)</button>
+</nav><div id="status" role="status"></div><div class="progress" role="progressbar" aria-label="Reviewed complexes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></header>
 <iframe id="editor" title="PanLigra interaction editor"></iframe>
 <script id="batch-data" type="application/json">__BATCH_DATA__</script>
 <script>
 'use strict';
 const data=JSON.parse(document.getElementById('batch-data').textContent);
 const $=id=>document.getElementById(id), frame=$('editor');
-let current=Math.min(data.index||0,data.entries.length-1), busy=false;
+let current=Math.min(data.index||0,data.entries.length-1), busy=false, zoom=1, fit=true, show3d=false;
 const entries=data.entries;
 const copy=x=>JSON.parse(JSON.stringify(x));
 const safeJSON=x=>JSON.stringify(x).replace(/</g,'\\u003c');
 function api(){return frame.contentWindow?.panligraBatch}
+function view(){
+  const doc=frame.contentDocument, svg=doc?.getElementById('pv-svg-canvas'), panel=doc?.getElementById('pv-3d-panel'), grid=doc?.getElementById('pv-sync-grid');
+  if(!svg||!panel||!grid)return;
+  const available=!!frame.contentWindow?.$3Dmol && !data.offline;
+  if(!available)show3d=false;
+  panel.style.display=show3d?'':'none';
+  grid.style.gridTemplateColumns=show3d?'':'minmax(0,1fr)';
+  $('toggle3d').disabled=busy||!available;
+  $('toggle3d').textContent=show3d?'Hide 3D':'Show 3D';
+  $('mode').textContent=available?'2D + 3D available':'Offline / 2D editor';
+  const stage=doc.getElementById('pv-stage');
+  const ratio=Number(svg.getAttribute('width'))/Number(svg.getAttribute('height'));
+  if(!Number.isFinite(ratio)||ratio<=0)return;
+  const availableWidth=Math.max(100,grid.clientWidth);
+  const availableHeight=Math.max(100,frame.clientHeight-stage.getBoundingClientRect().top-24);
+  const baseline=Math.min(availableWidth*(show3d?.52:1),availableHeight*ratio);
+  const w=Math.round(baseline*(fit?1:zoom));
+  svg.style.width=w+'px';svg.style.maxWidth='none';svg.style.height='auto';svg.style.justifySelf='center';
+  stage.style.overflow='auto';
+  $('zoom').textContent=fit?'Fit':Math.round(zoom*100)+'% of fit';
+}
 function capture(){if(!api())throw Error('Editor is not ready');entries[current].layout=api().snapshot();entries[current].svg=api().svg();}
 function refresh(message=''){
   $('pick').replaceChildren(...entries.map((e,i)=>new Option((i+1)+'. '+e.id+(e.done?' ✓':''),i)));
   $('pick').value=current;
   $('prev').disabled=busy||current===0;$('next').disabled=busy||current===entries.length-1;
-  for(const id of ['pick','approve','global','save','export'])$(id).disabled=busy;
-  $('status').textContent=message||((current+1)+' / '+entries.length+' • '+entries.filter(e=>e.done).length+' reviewed • '+data.failures.length+' failed inputs');
+  for(const id of ['pick','approve','global','save','export','fit','minus','plus'])$(id).disabled=busy;
+  $('approve').textContent=current===entries.length-1?'Finish editing':'Save & Next';
+  const percent=Math.round(100*entries.filter(e=>e.done).length/entries.length);
+  document.querySelector('.progress span').style.width=percent+'%';
+  document.querySelector('.progress').setAttribute('aria-valuenow',percent);
+  $('status').textContent=((current+1)+' / '+entries.length+' • '+entries.filter(e=>e.done).length+' reviewed • '+data.failures.length+' failed inputs')+(message?' • '+message:'');
 }
 function openEditor(e){
   return new Promise((resolve,reject)=>{
     frame.onload=()=>{try{
       if(!api())throw Error('Native editor failed to initialize');
       if(e.layout)api().restore(e.layout);
-      resolve();
+      view();resolve();
     }catch(err){reject(err)}};
     frame.srcdoc=data.template.replace('__PANLIGRA_SCENE__',()=>safeJSON(e.scene));
   });
@@ -72,11 +102,16 @@ async function show(i,save=true){
   if(busy)return;busy=true;refresh();
   try{if(save)capture();current=i;await openEditor(entries[current]);}
   catch(e){$('status').textContent=e.message;busy=false;refresh(e.message);return;}
-  busy=false;refresh();
+  busy=false;refresh();view();
 }
 function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+$('fit').onclick=()=>{fit=true;zoom=1;view()};
+$('minus').onclick=()=>{fit=false;zoom=Math.max(.25,zoom/1.2);view()};
+$('plus').onclick=()=>{fit=false;zoom=Math.min(4,zoom*1.2);view()};
+$('toggle3d').onclick=()=>{show3d=!show3d;view();frame.contentWindow.dispatchEvent(new Event('resize'))};
+window.addEventListener('resize',view);
 $('prev').onclick=()=>show(current-1);$('next').onclick=()=>show(current+1);$('pick').onchange=()=>show(Number($('pick').value));
-$('approve').onclick=()=>{try{capture();entries[current].done=true;if(current<entries.length-1)show(current+1,false);else refresh();}catch(e){refresh(e.message)}};
+$('approve').onclick=()=>{try{capture();entries[current].done=true;if(current<entries.length-1)show(current+1,false);else refresh('Review complete. Use Save editable HTML to download your changes.');}catch(e){refresh(e.message)}};
 $('global').onclick=()=>{
   try{capture();const style=api().style();
     for(const e of entries){
@@ -115,7 +150,7 @@ $('export').onclick=async()=>{
   files.push(['batch_report.json',JSON.stringify({failures:data.failures,entries:entries.map(e=>({id:e.id,done:e.done}))},null,2)]);
   download('PanLigra_figures.zip',zip(files));
  }catch(e){alert('Export failed: '+e.message)}
- finally{try{await openEditor(entries[start]);}finally{busy=false;refresh();}}
+ finally{try{await openEditor(entries[start]);}finally{busy=false;refresh();view();}}
 };
 show(current,false);
 </script></html>"""
@@ -135,9 +170,13 @@ def export_html(entries, output, failures=None, *, offline=True):
     template = template[:pos] + BRIDGE + template[pos:]
     if offline:
         template = re.sub(r'<script\s+src="https?://[^"]+"\s*></script>', "", template)
-    payload = {"template": template, "entries": entries, "failures": failures or [], "index": 0}
+    payload = {"template": template, "entries": entries, "failures": failures or [], "index": 0, "offline": offline}
     output = Path(output)
-    output.write_text(SHELL.replace("__BATCH_DATA__", _json(payload), 1), encoding="utf-8")
+    logo_path = ROOT / "assets" / "panligra_logo_icon.png"
+    logo = "data:image/png;base64," + base64.b64encode(logo_path.read_bytes()).decode("ascii") if logo_path.is_file() else ""
+    version = (ROOT / "VERSION.txt").read_text(encoding="utf-8").strip()
+    html = SHELL.replace("__BATCH_LOGO__", logo, 1).replace("__BATCH_VERSION__", version, 1)
+    output.write_text(html.replace("__BATCH_DATA__", _json(payload), 1), encoding="utf-8")
     return output
 
 def analyze_complex(path, site=None, *, width=1200, height=850):
