@@ -17,7 +17,7 @@ function sceneSvg(){
     const original=originalCanvasGeometry(), target=exportCanvasGeometry();
     const inner=new DOMParser().parseFromString(originalSceneSvg(),'image/svg+xml').documentElement;
     inner.removeAttribute('style');inner.setAttribute('x','0');inner.setAttribute('y','0');
-    inner.setAttribute('width',target.width);inner.setAttribute('height',target.height);
+    const pad=Math.min(20,Math.round(Math.min(target.width,target.height)*.025));inner.setAttribute('x',pad);inner.setAttribute('y',pad);inner.setAttribute('width',target.width-2*pad);inner.setAttribute('height',target.height-2*pad);
     inner.setAttribute('viewBox','0 0 '+original.width+' '+original.height);
     inner.setAttribute('preserveAspectRatio','xMidYMid meet');
     const outer=document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -47,7 +47,7 @@ body{display:flex;flex-direction:column;min-height:0}
 #pv-style-panel :is(label,h4,strong,output,span,.pv-style-help){color:#142238;font-weight:700}
 #pv-style-panel .pv-style-row label{font-size:12px}
 #pv-style-panel :is(input,select,button){color:#111e30;font:600 12px Arial,sans-serif;max-width:100%}
-#pv-style-panel select{min-width:0}
+#pv-style-panel select{min-width:0}\n#pv-style-panel details summary{cursor:pointer;font-weight:800;color:#142238;padding:5px 0}\n#pv-style-panel :is(select,input[type=number],button){min-height:28px;border:1px solid #aebfd1;border-radius:5px;background:#fff}\n#pv-style-panel input[type=number]{width:64px}\n#pv-style-panel .pv-style-actions button{flex:1}
 #pv-toolbar :is(button,summary,select){font-size:13px;font-weight:750}
 #pv-toolbar button:not(.active):not(.primary){color:#10243d}
 #pv-interaction-records{flex:none;margin:0;border-radius:0;max-height:34vh;overflow:auto}
@@ -56,10 +56,11 @@ body{display:flex;flex-direction:column;min-height:0}
 @media(max-width:720px){#pv-root.batch-inspector-open{grid-template-columns:minmax(0,1fr) minmax(210px,42%)}#pv-style-panel{padding:5px}}
 """
 BRIDGE = r"""
-async function batchOfflinePDF(){
-  const g=scaledExportGeometry(), name=(state.site||'PanLigra').replace(/[^a-zA-Z0-9_.-]/g,'_')+'_edited_'+g.scale+'x.pdf';
+async function batchOfflinePDF(returnBlob=false,scaleOverride=null){
+  const g=scaledExportGeometry();if(scaleOverride!==null){g.scale=scaleOverride;g.width=Math.round(g.baseWidth*g.scale);g.height=Math.round(g.baseHeight*g.scale)} const name=(state.site||'PanLigra').replace(/[^a-zA-Z0-9_.-]/g,'_')+'_edited_'+g.scale+'x.pdf';
   status.textContent='Preparing offline PDF…';
   try{
+    if(g.width*g.height>40000000)throw Error('Export exceeds 40 million pixels; reduce scale or dimensions.');
     const image=await new Promise((resolve,reject)=>{
       const url=URL.createObjectURL(new Blob([sceneSvg()],{type:'image/svg+xml;charset=utf-8'}));
       const im=new Image();
@@ -91,9 +92,10 @@ async function batchOfflinePDF(){
     const xref=length;add('xref\n0 6\n0000000000 65535 f \n');
     for(let i=1;i<=5;i++)add(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
     add('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
-    download(name,'application/pdf',new Blob(parts,{type:'application/pdf'}));
+    const result=new Blob(parts,{type:'application/pdf'});if(returnBlob)return result;
+    download(name,'application/pdf',result);
     status.textContent='Offline PDF exported ('+g.width+' × '+g.height+' pixels, lossless raster).';
-  }catch(e){status.textContent='PDF export failed: '+e.message;alert(status.textContent)}
+  }catch(e){if(returnBlob)throw e;status.textContent='PDF export failed: '+e.message;alert(status.textContent)}
 }
 const batchPdfButton=document.getElementById('pv-pdf');
 batchPdfButton.onclick=()=>{if(window.jspdf?.jsPDF && typeof window.jspdf.jsPDF.API.svg==='function')return exportPDF();return batchOfflinePDF()};
@@ -107,6 +109,17 @@ window.panligraBatch = {
         status.textContent='Export figure: '+width+' × '+height+' px; original geometry preserved.';
     },
     svg: () => sceneSvg(),
+    pdf: scale => batchOfflinePDF(true,scale),
+    png: async scale => {
+        const g=exportCanvasGeometry(),w=Math.round(g.width*scale),h=Math.round(g.height*scale);
+        if(w*h>40000000)throw Error('Export exceeds 40 million pixels; reduce scale or dimensions.');
+        const url=URL.createObjectURL(new Blob([sceneSvg()],{type:'image/svg+xml;charset=utf-8'}));
+        try{
+            const im=await new Promise((ok,fail)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>fail(Error('SVG rasterization failed'));i.src=url});
+            const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(im,0,0,w,h);
+            return await new Promise((ok,fail)=>c.toBlob(b=>b?ok(b):fail(Error('PNG encoding failed')),'image/png'));
+        }finally{URL.revokeObjectURL(url)}
+    },
     restore: candidate => loadLayoutObject(candidate),
     style: () => clone(state.style),
     applyStyle: style => {
@@ -137,8 +150,8 @@ header.ribbon-collapsed .brand{margin-bottom:4px}
 <button class="primary" id="approve">Save &amp; Next</button><span class="separator ribbon-extra"></span>
 <button class="ribbon-extra" id="fit" title="Fit figure to viewport">Fit to screen</button><button class="ribbon-extra" id="minus" aria-label="Zoom out">−</button><button class="ribbon-extra" id="plus" aria-label="Zoom in">+</button><span class="ribbon-extra" id="zoom" aria-live="polite">Fit</span><button class="ribbon-extra" id="figsize">Figure size</button>
 <span class="separator ribbon-extra"></span><button class="ribbon-extra" id="toggle3d">Show 3D</button><button class="ribbon-extra" id="global">Apply style to all</button>
-<button id="save">Save editable HTML</button><button class="ribbon-extra" id="export">Export SVGs (ZIP)</button>
-</nav><dialog id="sizeDialog" style="border:1px solid #9eb0c6;border-radius:9px;padding:18px;color:#10243d;max-width:95vw"><form method="dialog"><h2 style="margin:0 0 12px;font-size:18px">Figure dimensions</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><label>Width (px)<br><input id="figw" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label><label>Height (px)<br><input id="figh" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label></div><p><label><input type="checkbox" id="lockratio" checked> Lock aspect ratio</label></p><p style="font-size:12px;max-width:330px">Sets SVG, PNG and PDF export dimensions. The molecular geometry stays locked; different aspect ratios add white margins rather than stretching the figure. The editing canvas remains unchanged.</p><div style="display:flex;gap:8px"><button type="button" id="applysize" class="primary">Apply</button><button type="button" id="applysizeall">Apply to all</button><button value="cancel">Cancel</button></div></form></dialog><div id="status" role="status"></div><div class="progress" role="progressbar" aria-label="Reviewed complexes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></header>
+<button id="save">Save editable HTML</button><button class="ribbon-extra" id="export">Export batch (ZIP)</button>
+</nav><dialog id="batchExportDialog"><form method="dialog"><h2>Batch export</h2><label><input type="checkbox" id="outSvg" checked> SVG (vector)</label><br><label><input type="checkbox" id="outPng"> PNG</label><br><label><input type="checkbox" id="outPdf"> PDF (lossless raster)</label><p><label>Raster scale <select id="batchScale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="6">6×</option></select></label></p><button type="button" class="primary" id="runBatchExport">Export ZIP</button> <button value="cancel">Cancel</button></form></dialog><dialog id="sizeDialog" style="border:1px solid #9eb0c6;border-radius:9px;padding:18px;color:#10243d;max-width:95vw"><form method="dialog"><h2 style="margin:0 0 12px;font-size:18px">Figure dimensions</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><label>Width (px)<br><input id="figw" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label><label>Height (px)<br><input id="figh" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label></div><p><label><input type="checkbox" id="lockratio" checked> Lock aspect ratio</label></p><p style="font-size:12px;max-width:330px">Sets SVG, PNG and PDF export dimensions. The molecular geometry stays locked; different aspect ratios add white margins rather than stretching the figure. The editing canvas remains unchanged.</p><div style="display:flex;gap:8px"><button type="button" id="applysize" class="primary">Apply</button><button type="button" id="applysizeall">Apply to all</button><button value="cancel">Cancel</button></div></form></dialog><div id="status" role="status"></div><div class="progress" role="progressbar" aria-label="Reviewed complexes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></header>
 <iframe id="editor" title="PanLigra interaction editor"></iframe>
 <script id="batch-data" type="application/json">__BATCH_DATA__</script>
 <script>
@@ -192,11 +205,18 @@ function openEditor(e){
       if(!api())throw Error('Native editor failed to initialize');
       if(e.layout)api().restore(e.layout);
       const doc=frame.contentDocument, inspector=doc.getElementById('pv-style-panel');
+      for(const section of inspector.querySelectorAll('.pv-style-grid section')){
+        const heading=section.querySelector('h4');if(!heading)continue;
+        const details=doc.createElement('details'),summary=doc.createElement('summary');
+        summary.textContent=heading.textContent;heading.remove();details.append(summary);
+        while(section.firstChild)details.append(section.firstChild);
+        details.open=summary.textContent==='Residue labels';section.append(details);
+      }
       const observer=new frame.contentWindow.ResizeObserver(()=>requestAnimationFrame(view));
       observer.observe(doc.getElementById('pv-stage'));
       new frame.contentWindow.MutationObserver(view).observe(inspector,{attributes:true,attributeFilter:['style']});
       doc.getElementById('pv-interaction-toggle').addEventListener('click',()=>frame.contentWindow.requestAnimationFrame(view));
-      view();resolve();
+      doc.addEventListener('keydown',navigateKey);view();resolve();
     }catch(err){reject(err)}};
     frame.srcdoc=data.template.replace('__PANLIGRA_SCENE__',()=>safeJSON(e.scene));
   });
@@ -229,6 +249,8 @@ $('minus').onclick=()=>{fit=false;zoom=Math.max(.25,zoom/1.2);view()};
 $('plus').onclick=()=>{fit=false;zoom=Math.min(4,zoom*1.2);view()};
 $('toggle3d').onclick=()=>{show3d=!show3d;view();frame.contentWindow.dispatchEvent(new Event('resize'))};
 window.addEventListener('resize',view);
+function navigateKey(e){if(!e.altKey||e.ctrlKey||e.metaKey||e.target?.matches?.('input,select,textarea'))return;if(e.key==='PageDown'&&!busy&&current<entries.length-1){e.preventDefault();show(current+1)}if(e.key==='PageUp'&&!busy&&current>0){e.preventDefault();show(current-1)}}
+window.addEventListener('keydown',navigateKey);
 $('prev').onclick=()=>show(current-1);$('next').onclick=()=>show(current+1);$('pick').onchange=()=>show(Number($('pick').value));
 $('approve').onclick=()=>{try{capture();entries[current].done=true;if(current<entries.length-1)show(current+1,false);else refresh('Review complete. Use Save editable HTML to download your changes.');}catch(e){refresh(e.message)}};
 $('global').onclick=()=>{
@@ -250,22 +272,27 @@ $('save').onclick=()=>{try{capture();data.index=current;data.ribbonCollapsed=rib
 }catch(e){refresh(e.message)}};
 // ZIP store method, CRC32 and central directory; no external dependency.
 function zip(files){
- const enc=new TextEncoder(), chunks=[], central=[];let offset=0,cs=0;
+ const enc=new TextEncoder(), chunks=[], central=[];let offset=0,cs=0;if(files.length>65535)throw Error('ZIP entry limit exceeded');
  function header(n){return new Uint8Array(n)}
  function put(a,i,v,n=4){const d=new DataView(a.buffer);n===2?d.setUint16(i,v,true):d.setUint32(i,v>>>0,true)}
  function crc(a){let c=0xffffffff;for(const b of a){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return (c^0xffffffff)>>>0}
  for(const [name,txt] of files){
-  const fn=enc.encode(name),body=enc.encode(txt),sum=crc(body),h=header(30),z=header(46);
+  const fn=enc.encode(name),body=typeof txt==='string'?enc.encode(txt):txt,sum=crc(body),h=header(30),z=header(46);
   put(h,0,0x04034b50);put(h,4,20,2);put(h,6,0x800,2);put(h,14,sum);put(h,18,body.length);put(h,22,body.length);put(h,26,fn.length,2);
   put(z,0,0x02014b50);put(z,4,20,2);put(z,6,20,2);put(z,8,0x800,2);put(z,16,sum);put(z,20,body.length);put(z,24,body.length);put(z,28,fn.length,2);put(z,42,offset);
+  if(offset+h.length+fn.length+body.length>0xffffffff)throw Error('ZIP size limit exceeded');
   chunks.push(h,fn,body);central.push(z,fn);offset+=h.length+fn.length+body.length;cs+=z.length+fn.length;
  }
  const end=header(22);put(end,0,0x06054b50);put(end,8,files.length,2);put(end,10,files.length,2);put(end,12,cs);put(end,16,offset);return new Blob([...chunks,...central,end],{type:'application/zip'});
 }
-$('export').onclick=async()=>{
+$('export').onclick=()=>$('batchExportDialog').showModal();
+$('runBatchExport').onclick=async()=>{
+ const formats={svg:$('outSvg').checked,png:$('outPng').checked,pdf:$('outPdf').checked},scale=Number($('batchScale').value);
+ if(!Object.values(formats).some(Boolean)){alert('Select an export format.');return;}
+ $('batchExportDialog').close();
  if(busy)return;busy=true;refresh();const start=current;
  try{capture();const files=[];
-  for(let i=0;i<entries.length;i++){const e=entries[i];await openEditor(e);e.svg=api().svg();const name=String(i+1).padStart(3,'0')+'_'+e.id.replace(/[^a-zA-Z0-9_.-]/g,'_');files.push([name+'.svg',e.svg],[name+'.panligra.json',JSON.stringify(api().snapshot(),null,2)]);$('status').textContent='Exporting '+(i+1)+' / '+entries.length;}
+  for(let i=0;i<entries.length;i++){const e=entries[i];await openEditor(e);e.svg=api().svg();const name=String(i+1).padStart(3,'0')+'_'+e.id.replace(/[^a-zA-Z0-9_.-]/g,'_');if(formats.svg)files.push([name+'.svg',e.svg]);if(formats.png)files.push([name+'.png',new Uint8Array(await (await api().png(scale)).arrayBuffer())]);if(formats.pdf)files.push([name+'.pdf',new Uint8Array(await (await api().pdf(scale)).arrayBuffer())]);files.push([name+'.panligra.json',JSON.stringify(api().snapshot(),null,2)]);$('status').textContent='Exporting '+(i+1)+' / '+entries.length;}
   files.push(['batch_report.json',JSON.stringify({failures:data.failures,entries:entries.map(e=>({id:e.id,done:e.done}))},null,2)]);
   download('PanLigra_figures.zip',zip(files));
  }catch(e){alert('Export failed: '+e.message)}
