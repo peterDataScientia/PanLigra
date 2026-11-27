@@ -27,7 +27,7 @@ window.panligraBatch = {
 };
 """
 
-SHELL = """<!doctype html><html lang="en"><meta charset="utf-8">
+SHELL = r"""<!doctype html><html lang="en"><meta charset="utf-8">
 <title>PanLigra Batch Studio</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font:14px Arial,sans-serif;color:#172033;background:#f5f7fa}
@@ -71,7 +71,7 @@ function openEditor(e){
 async function show(i,save=true){
   if(busy)return;busy=true;refresh();
   try{if(save)capture();current=i;await openEditor(entries[current]);}
-  catch(e){$('status').textContent=e.message;busy=false;return;}
+  catch(e){$('status').textContent=e.message;busy=false;refresh(e.message);return;}
   busy=false;refresh();
 }
 function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
@@ -134,7 +134,7 @@ def export_html(entries, output, failures=None, *, offline=True):
         raise RuntimeError("Incompatible native editor")
     template = template[:pos] + BRIDGE + template[pos:]
     if offline:
-        template = re.sub(r'<script\\s+src="https?://[^"]+"\\s*></script>', "", template)
+        template = re.sub(r'<script\s+src="https?://[^"]+"\s*></script>', "", template)
     payload = {"template": template, "entries": entries, "failures": failures or [], "index": 0}
     output = Path(output)
     output.write_text(SHELL.replace("__BATCH_DATA__", _json(payload), 1), encoding="utf-8")
