@@ -143,6 +143,8 @@ def export_html(entries, output, failures=None, *, offline=True):
 def analyze_complex(path, site=None, *, width=1200, height=850):
     # Import RDKit before PLIP/Open Babel, matching the native application.
     from rdkit import Chem
+    from plip_compat import ensure_inchikey_support
+    ensure_inchikey_support()
     from plip.structure.preparation import PDBComplex
     from utils import plip_2d_interactions
     from interactive_engine import build_editor_scene
@@ -152,7 +154,7 @@ def analyze_complex(path, site=None, *, width=1200, height=850):
         mol = PDBComplex()
         mol.load_pdb(str(path))
         sites = [x.strip() for x in str(mol).splitlines()[1:]
-                 if x.strip() and x.split(":")[0] not in {"ARN","ASH","GLH","LYN","HIE","HIP"}]
+                 if x.strip() and x.split(":")[0] not in {"ARN","ASH","GLH","LYN","HIE","HIP","SO4","PO4","HOH","WAT"}]
         if len(sites) != 1:
             raise ValueError(f"Expected exactly one eligible site; specify site explicitly: {sites}")
         site = sites[0]
@@ -178,8 +180,12 @@ def batch(items, output, *, offline=True):
             entries.append({"id": ident, "scene": analyze_complex(item["path"], item.get("site"))})
         except Exception as exc:
             failures.append({"id": ident, "path": str(item["path"]), "error": str(exc)})
+            print(f"[FAILED] {ident}: {exc}", flush=True)
     report = Path(str(output) + ".report.json")
     report.write_text(json.dumps({"successful": [e["id"] for e in entries], "failures": failures}, indent=2), encoding="utf-8")
+    if not entries:
+        print(f"No successful complexes. See {report}", flush=True)
+        return failures
     export_html(entries, output, failures, offline=offline)
     return failures
 
