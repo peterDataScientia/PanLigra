@@ -12,6 +12,24 @@ ROOT = Path(__file__).resolve().parent
 def _json(value):
     return json.dumps(value, ensure_ascii=True, allow_nan=False).replace("<", "\\u003c")
 
+EXPORT_SIZE_JS = r"""
+function sceneSvg(){
+    const original=originalCanvasGeometry(), target=exportCanvasGeometry();
+    const inner=new DOMParser().parseFromString(originalSceneSvg(),'image/svg+xml').documentElement;
+    inner.removeAttribute('style');inner.setAttribute('x','0');inner.setAttribute('y','0');
+    inner.setAttribute('width',target.width);inner.setAttribute('height',target.height);
+    inner.setAttribute('viewBox','0 0 '+original.width+' '+original.height);
+    inner.setAttribute('preserveAspectRatio','xMidYMid meet');
+    const outer=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    outer.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    outer.setAttribute('width',target.width);outer.setAttribute('height',target.height);
+    outer.setAttribute('viewBox','0 0 '+target.width+' '+target.height);
+    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bg.setAttribute('width',target.width);bg.setAttribute('height',target.height);bg.setAttribute('fill','#fff');
+    outer.append(bg,inner);
+    return new XMLSerializer().serializeToString(outer);
+}
+"""
 BATCH_EDITOR_CSS = """
 /* Batch-only application chrome; SVG scientific scene untouched. */
 html,body{height:100%;margin:0!important;overflow:hidden;background:#eef2f7;color:#101e32;font-family:Arial,sans-serif}
@@ -82,6 +100,12 @@ batchPdfButton.onclick=()=>{if(window.jspdf?.jsPDF && typeof window.jspdf.jsPDF.
 
 window.panligraBatch = {
     snapshot: () => clone(state),
+    figureSize: () => ({width:state.batchFigureSize?.width||state.width,height:state.batchFigureSize?.height||state.height}),
+    setFigureSize: (width,height) => {
+        if(!Number.isInteger(width)||!Number.isInteger(height)||width<300||height<300||width>5000||height>5000)throw Error('Figure dimensions must be integers from 300 to 5000 px.');
+        pushUndo();state.batchFigureSize={width,height};
+        status.textContent='Export figure: '+width+' × '+height+' px; original geometry preserved.';
+    },
     svg: () => sceneSvg(),
     restore: candidate => loadLayoutObject(candidate),
     style: () => clone(state.style),
@@ -107,10 +131,10 @@ nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}button,select{font:in
 <header><div class="brand"><img id="logo" alt="" src="__BATCH_LOGO__"><strong>PanLigra</strong><small>Batch Studio · __BATCH_VERSION__</small><span class="mode" id="mode"></span></div><nav>
 <button id="prev" title="Previous complex">‹ Previous</button><select id="pick" aria-label="Complex"></select><button id="next" title="Next complex">Next ›</button>
 <button class="primary" id="approve">Save &amp; Next</button><span class="separator"></span>
-<button id="fit" title="Fit figure to viewport">Fit to screen</button><button id="minus" aria-label="Zoom out">−</button><button id="plus" aria-label="Zoom in">+</button><span id="zoom" aria-live="polite">Fit</span>
+<button id="fit" title="Fit figure to viewport">Fit to screen</button><button id="minus" aria-label="Zoom out">−</button><button id="plus" aria-label="Zoom in">+</button><span id="zoom" aria-live="polite">Fit</span><button id="figsize">Figure size</button>
 <span class="separator"></span><button id="toggle3d">Show 3D</button><button id="global">Apply style to all</button>
 <button id="save">Save editable HTML</button><button id="export">Export SVGs (ZIP)</button>
-</nav><div id="status" role="status"></div><div class="progress" role="progressbar" aria-label="Reviewed complexes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></header>
+</nav><dialog id="sizeDialog" style="border:1px solid #9eb0c6;border-radius:9px;padding:18px;color:#10243d;max-width:95vw"><form method="dialog"><h2 style="margin:0 0 12px;font-size:18px">Figure dimensions</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><label>Width (px)<br><input id="figw" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label><label>Height (px)<br><input id="figh" type="number" min="300" max="5000" step="1" required style="width:110px;padding:7px"></label></div><p><label><input type="checkbox" id="lockratio" checked> Lock aspect ratio</label></p><p style="font-size:12px;max-width:330px">Sets SVG, PNG and PDF export dimensions. The molecular geometry stays locked; different aspect ratios add white margins rather than stretching the figure. The editing canvas remains unchanged.</p><div style="display:flex;gap:8px"><button type="button" id="applysize" class="primary">Apply</button><button type="button" id="applysizeall">Apply to all</button><button value="cancel">Cancel</button></div></form></dialog><div id="status" role="status"></div><div class="progress" role="progressbar" aria-label="Reviewed complexes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></header>
 <iframe id="editor" title="PanLigra interaction editor"></iframe>
 <script id="batch-data" type="application/json">__BATCH_DATA__</script>
 <script>
@@ -150,7 +174,7 @@ function refresh(message=''){
   $('pick').replaceChildren(...entries.map((e,i)=>new Option((i+1)+'. '+e.id+(e.done?' ✓':''),i)));
   $('pick').value=current;
   $('prev').disabled=busy||current===0;$('next').disabled=busy||current===entries.length-1;
-  for(const id of ['pick','approve','global','save','export','fit','minus','plus'])$(id).disabled=busy;
+  for(const id of ['pick','approve','global','save','export','fit','minus','plus','figsize'])$(id).disabled=busy;
   $('approve').textContent=current===entries.length-1?'Finish editing':'Save & Next';
   const percent=Math.round(100*entries.filter(e=>e.done).length/entries.length);
   document.querySelector('.progress span').style.width=percent+'%';
@@ -177,6 +201,12 @@ async function show(i,save=true){
   busy=false;refresh();view();
 }
 function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+let sizeRatio=1;
+$('figsize').onclick=()=>{const g=api().figureSize();$('figw').value=g.width;$('figh').value=g.height;sizeRatio=g.width/g.height;$('sizeDialog').showModal()};
+$('figw').oninput=()=>{if($('lockratio').checked)$('figh').value=Math.round(Number($('figw').value)/sizeRatio)};
+$('figh').oninput=()=>{if($('lockratio').checked)$('figw').value=Math.round(Number($('figh').value)*sizeRatio)};
+function applySize(all){try{const w=Number($('figw').value),h=Number($('figh').value);api().setFigureSize(w,h);capture();if(all)for(const e of entries){const layout=e.layout||copy(e.scene);layout.batchFigureSize={width:w,height:h};e.layout=layout;e.svg=null} $('sizeDialog').close();refresh('Export figure size: '+w+' × '+h+' px'+(all?' (all complexes)':''));}catch(e){alert(e.message)}}
+$('applysize').onclick=()=>applySize(false);$('applysizeall').onclick=()=>applySize(true);
 $('fit').onclick=()=>{fit=true;zoom=1;view()};
 $('minus').onclick=()=>{fit=false;zoom=Math.max(.25,zoom/1.2);view()};
 $('plus').onclick=()=>{fit=false;zoom=Math.min(4,zoom*1.2);view()};
@@ -241,6 +271,13 @@ def export_html(entries, output, failures=None, *, offline=True):
         raise RuntimeError("Incompatible native editor")
     template = template[:pos] + BRIDGE + template[pos:]
     template = template.replace("</style>", BATCH_EDITOR_CSS + "</style>", 1)
+    # The original drawing and editor coordinate system remain intact. Only
+    # the exported page changes, with uniform scaling and centered margins.
+    template = template.replace("function exportCanvasGeometry(){", "function originalCanvasGeometry(){", 1)
+    template = template.replace("function scaledExportGeometry(){", "function exportCanvasGeometry(){return state.batchFigureSize || originalCanvasGeometry();}\\nfunction scaledExportGeometry(){", 1)
+    template = template.replace("function sceneSvg(){const g=exportCanvasGeometry()", "function sceneSvg(){const g=originalCanvasGeometry()", 1)
+    template = template.replace("function sceneSvg(){", "function originalSceneSvg(){", 1)
+    template = template.replace("function originalSceneSvg(){", EXPORT_SIZE_JS + "\\nfunction originalSceneSvg(){", 1)
     if offline:
         template = re.sub(r'<script\s+src="https?://[^"]+"\s*></script>', "", template)
     payload = {"template": template, "entries": entries, "failures": failures or [], "index": 0, "offline": offline}
